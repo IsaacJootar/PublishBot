@@ -1,0 +1,12 @@
+# PublishAI uses Laravel (PHP), not Python.
+# See docs/stack.md for the complete package list.
+#
+# To install all dependencies:
+#   composer install
+#   npm install
+#
+# System requirements:
+#   PHP 8.3+
+#   Composer
+#   Node.js + NPM
+#   Pandoc (for document export)
