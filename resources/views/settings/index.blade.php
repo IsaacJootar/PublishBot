@@ -133,6 +133,7 @@
                     class="btn-outline"
                     x-data="{ loading: false }"
                     :disabled="loading"
+                    :style="loading ? 'opacity:0.7;cursor:not-allowed;' : ''"
                     @click="
                         loading = true;
                         fetch('{{ route('settings.test') }}', {
@@ -152,8 +153,12 @@
                         })
                     "
                 >
-                    <span class="btn-spinner" x-show="loading" x-cloak></span>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" x-show="!loading" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <template x-if="loading">
+                        <span class="btn-spinner"></span>
+                    </template>
+                    <template x-if="!loading">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </template>
                     <span x-text="loading ? 'Connecting...' : 'Test connection'"></span>
                 </button>
 
