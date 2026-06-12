@@ -27,17 +27,17 @@
 
         {{-- Stage cards --}}
         <div id="stages-container" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;">
-            @foreach($run->stages as $stage)
+            @forelse($run->stages as $stage)
             @include('runs._stage-card', ['stage' => $stage, 'run' => $run])
-            @endforeach
+            @empty
+            <div style="padding:1.25rem;background:#F5F4FF;border-radius:12px;text-align:center;">
+                <p style="font-size:0.85rem;color:#9B93B0;margin:0;">Starting pipeline... refresh in a moment.</p>
+            </div>
+            @endforelse
         </div>
 
-        {{-- Validation report panel (shown after Stage 1 completes) --}}
-        <div id="validation-panel" style="display:{{ $run->validation_report ? 'block' : 'none' }};margin-bottom:1.5rem;">
-            @if($run->validation_report)
-            @include('runs._validation-panel', ['run' => $run])
-            @endif
-        </div>
+        {{-- Validation report panel — populated by JS --}}
+        <div id="validation-panel" style="display:{{ $run->validation_report ? 'block' : 'none' }};margin-bottom:1.5rem;"></div>
 
         {{-- Download All (shown when completed) --}}
         <div id="download-all-panel" style="display:{{ $run->status === 'completed' ? 'block' : 'none' }};">

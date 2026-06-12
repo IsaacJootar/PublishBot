@@ -66,6 +66,23 @@
             @endforeach
         </nav>
 
+        {{-- Recent topics --}}
+        @auth
+        @php $recentRuns = Auth::user()->runs()->orderByDesc('created_at')->limit(5)->get(['id','topic']); @endphp
+        @if($recentRuns->isNotEmpty())
+        <div style="padding:0.75rem 0.75rem 0;border-top:1px solid rgba(245,158,11,0.06);">
+            <p style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(245,158,11,0.4);margin:0 0 0.4rem;padding:0 0.375rem;">Recent topics</p>
+            @foreach($recentRuns as $recentRun)
+            <a href="{{ route('runs.show', $recentRun) }}" style="display:block;font-size:0.75rem;color:rgba(255,255,255,0.35);text-decoration:none;padding:0.3rem 0.375rem;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color 0.15s,background 0.15s;"
+               onmouseover="this.style.color='rgba(255,230,150,0.8)';this.style.background='rgba(245,158,11,0.07)'"
+               onmouseout="this.style.color='rgba(255,255,255,0.35)';this.style.background='transparent'">
+                {{ \Illuminate\Support\Str::limit($recentRun->topic, 28) }}
+            </a>
+            @endforeach
+        </div>
+        @endif
+        @endauth
+
         {{-- User footer --}}
         @auth
         <div style="border-top: 1px solid rgba(245,158,11,0.1); padding: 1rem 1rem;">
