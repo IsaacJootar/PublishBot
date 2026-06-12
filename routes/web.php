@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RunController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,9 +13,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/runs', [DashboardController::class, 'run'])->name('runs.create');
 
-    // Placeholder routes so sidebar links resolve without errors
-    Route::get('/runs', fn () => view('placeholder', ['page' => 'History']))->name('runs.index');
-    Route::get('/runs/{run}', fn () => view('placeholder', ['page' => 'Run Detail']))->name('runs.show');
+    // Run routes
+    Route::get('/runs', [RunController::class, 'index'])->name('runs.index');
+    Route::get('/runs/{pipelineRun}', [RunController::class, 'show'])->name('runs.show');
+    Route::get('/runs/{pipelineRun}/status', [RunController::class, 'status'])->name('runs.status');
+    Route::post('/runs/{pipelineRun}/continue', [RunController::class, 'continue'])->name('runs.continue');
+    Route::post('/runs/{pipelineRun}/retry/{stageNumber}', [RunController::class, 'retry'])->name('runs.retry');
+    Route::post('/runs/{pipelineRun}/rerun', [RunController::class, 'rerun'])->name('runs.rerun');
+    Route::delete('/runs/{pipelineRun}', [RunController::class, 'destroy'])->name('runs.destroy');
+    Route::get('/runs/{pipelineRun}/files/{filename}', [RunController::class, 'file'])->name('runs.file');
+    Route::get('/runs/{pipelineRun}/download-all', [RunController::class, 'downloadAll'])->name('runs.download-all');
+
+    // Placeholder
     Route::get('/sales', fn () => view('placeholder', ['page' => 'Sales']))->name('sales.index');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
