@@ -262,35 +262,37 @@
    BUTTONS
 ═══════════════════════════════════════════════ */
 .btn-primary {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: #6C3CE1; color: #fff;
   padding: 0.625rem 1.25rem;
   border-radius: 10px; font-size: 0.875rem; font-weight: 600;
-  border: none; cursor: pointer;
+  border: none; cursor: pointer; white-space: nowrap;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
   box-shadow: 0 2px 8px rgba(108,60,225,0.3);
+  text-decoration: none;
 }
 .btn-primary:hover { background: #5A2EC9; box-shadow: 0 4px 14px rgba(108,60,225,0.4); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .btn-outline {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: transparent; color: #6C3CE1;
   padding: 0.625rem 1.25rem;
   border-radius: 10px; font-size: 0.875rem; font-weight: 600;
-  border: 1.5px solid #6C3CE1; cursor: pointer;
+  border: 1.5px solid #6C3CE1; cursor: pointer; white-space: nowrap;
   transition: background 0.15s, color 0.15s;
+  text-decoration: none;
 }
 .btn-outline:hover { background: #F0EBFF; }
 .btn-outline:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .btn-ghost {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: transparent; color: #5C5470;
   padding: 0.625rem 1rem;
   border-radius: 10px; font-size: 0.875rem; font-weight: 500;
-  border: none; cursor: pointer;
+  border: none; cursor: pointer; white-space: nowrap;
   transition: background 0.15s, color 0.15s;
 }
 .btn-ghost:hover { background: #F0EBFF; color: #6C3CE1; }

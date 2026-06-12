@@ -114,31 +114,25 @@
                         autocomplete="off"
                         style="font-family: monospace; font-size: 0.85rem;"
                     />
-                    <p style="font-size:0.75rem; color:#9B93B0; margin:0.35rem 0 0;">Used silently if Claude is unavailable. Optional.</p>
+                    <p style="font-size:0.75rem; color:#9B93B0; margin:0.35rem 0 0;">If Claude goes down, PublishAI silently switches to this. Optional.</p>
                 </div>
             </div>
 
             {{-- Actions --}}
             <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem; margin-bottom:1.5rem;">
-                <button
-                    type="submit"
-                    x-data="{ loading: false }"
-                    @click="loading = true"
-                    :disabled="loading"
-                    class="btn-primary"
-                >
-                    <span x-show="!loading" style="display:flex;align-items:center;gap:6px;">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                        Save settings
-                    </span>
-                    <span x-show="loading" style="display:flex;align-items:center;gap:6px;" x-cloak>
-                        <span class="btn-spinner"></span> Saving...
-                    </span>
+
+                {{-- Save: plain submit, no Alpine — page redirects naturally --}}
+                <button type="submit" class="btn-primary">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Save settings
                 </button>
 
+                {{-- Test connection: uses fetch, needs Alpine loading state --}}
                 <button
                     type="button"
+                    class="btn-outline"
                     x-data="{ loading: false }"
+                    :disabled="loading"
                     @click="
                         loading = true;
                         fetch('{{ route('settings.test') }}', {
@@ -157,17 +151,12 @@
                             window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Test failed. Try again.', type: 'error' } }));
                         })
                     "
-                    :disabled="loading"
-                    class="btn-outline"
                 >
-                    <span x-show="!loading" style="display:flex;align-items:center;gap:6px;">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        Test connection
-                    </span>
-                    <span x-show="loading" style="display:flex;align-items:center;gap:6px;" x-cloak>
-                        <span class="btn-spinner"></span> Connecting...
-                    </span>
+                    <span class="btn-spinner" x-show="loading" x-cloak></span>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" x-show="!loading" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span x-text="loading ? 'Connecting...' : 'Test connection'"></span>
                 </button>
+
             </div>
         </form>
 
