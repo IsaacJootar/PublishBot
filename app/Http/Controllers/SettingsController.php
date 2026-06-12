@@ -74,7 +74,7 @@ class SettingsController extends Controller
         }
 
         try {
-            $response = Http::withoutVerifying()->withHeaders([
+            $response = Http::withOptions(['verify' => false])->withHeaders([
                 'x-api-key' => $settings->api_key_encrypted,
                 'anthropic-version' => '2023-06-01',
                 'content-type' => 'application/json',
