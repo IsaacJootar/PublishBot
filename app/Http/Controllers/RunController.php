@@ -7,6 +7,7 @@ use App\Models\PipelineRun;
 use App\Services\PipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -86,12 +87,11 @@ class RunController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    /** Serve a single output file. */
-    public function file(PipelineRun $pipelineRun, string $filename): Response
+    /** In-browser file viewer or direct download if ?download=1 */
+    public function file(Request $request, PipelineRun $pipelineRun, string $filename): Response|View
     {
         $this->authorise($pipelineRun);
 
-        // Whitelist filenames
         $allowed = array_column(PipelineService::STAGES, 'file');
         abort_if(! in_array($filename, $allowed), 404);
 
@@ -100,9 +100,19 @@ class RunController extends Controller
 
         $content = Storage::disk('local')->get($path);
 
-        return response($content, 200, [
-            'Content-Type' => 'text/plain; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        if ($request->boolean('download')) {
+            return response($content, 200, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            ]);
+        }
+
+        return view('runs.file', [
+            'run' => $pipelineRun,
+            'filename' => $filename,
+            'content' => $content,
+            'wordCount' => str_word_count($content),
+            'charCount' => strlen($content),
         ]);
     }
 

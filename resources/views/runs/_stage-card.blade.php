@@ -30,13 +30,17 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;">
             <span class="stage-badge" style="background:{{ $c['badgeBg'] }};color:{{ $c['badge'] }};border-radius:999px;padding:2px 10px;font-size:0.72rem;font-weight:700;">{{ $c['label'] }}</span>
-            {{-- File download link --}}
-            <a href="{{ route('runs.file', [$run, $stage->output_filename]) }}"
-               class="stage-file-link"
-               style="display:{{ $stage->status === 'completed' ? 'inline-flex' : 'none' }};align-items:center;gap:4px;font-size:0.75rem;font-weight:600;color:#065F46;text-decoration:none;background:#D1FAE5;border-radius:999px;padding:2px 10px;">
-                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Download
-            </a>
+            {{-- File links --}}
+            <span class="stage-file-link" style="display:{{ $stage->status === 'completed' ? 'inline-flex' : 'none' }};align-items:center;gap:4px;">
+                <a href="{{ route('runs.file', [$run, $stage->output_filename]) }}"
+                   style="font-size:0.75rem;font-weight:600;color:#1D4ED8;text-decoration:none;background:#DBEAFE;border-radius:999px;padding:2px 10px;">
+                    View
+                </a>
+                <a href="{{ route('runs.file', [$run, $stage->output_filename]) }}?download=1"
+                   style="font-size:0.75rem;font-weight:600;color:#065F46;text-decoration:none;background:#D1FAE5;border-radius:999px;padding:2px 10px;">
+                    ↓
+                </a>
+            </span>
             {{-- Retry button --}}
             <button class="stage-retry"
                 onclick="retryStage('{{ $stage->stage_number }}')"

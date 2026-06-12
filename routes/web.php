@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RunController;
+use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,8 +25,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/runs/{pipelineRun}/files/{filename}', [RunController::class, 'file'])->name('runs.file');
     Route::get('/runs/{pipelineRun}/download-all', [RunController::class, 'downloadAll'])->name('runs.download-all');
 
-    // Placeholder
-    Route::get('/sales', fn () => view('placeholder', ['page' => 'Sales']))->name('sales.index');
+    // Sales
+    Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
+    Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
+    Route::delete('/sales/{sale}', [SalesController::class, 'destroy'])->name('sales.destroy');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
