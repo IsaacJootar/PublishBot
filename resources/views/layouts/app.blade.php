@@ -134,12 +134,7 @@
 @if(session('toast'))
 <script>
     window.addEventListener('load', () => {
-        window.dispatchEvent(new CustomEvent('toast', {
-            detail: {
-                message: "{{ addslashes(session('toast.message')) }}",
-                type: "{{ session('toast.type') }}"
-            }
-        }));
+        window.showToast({ message: "{{ addslashes(session('toast.message')) }}", type: "{{ session('toast.type') }}" });
     });
 </script>
 @endif

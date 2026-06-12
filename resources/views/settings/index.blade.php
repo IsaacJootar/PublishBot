@@ -127,39 +127,9 @@
                     Save settings
                 </button>
 
-                {{-- Test connection: uses fetch, needs Alpine loading state --}}
-                <button
-                    type="button"
-                    class="btn-outline"
-                    x-data="{ loading: false }"
-                    :disabled="loading"
-                    :style="loading ? 'opacity:0.7;cursor:not-allowed;' : ''"
-                    @click="
-                        loading = true;
-                        fetch('{{ route('settings.test') }}', {
-                            method: 'POST',
-                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                        })
-                        .then(r => r.json())
-                        .then(data => {
-                            loading = false;
-                            window.dispatchEvent(new CustomEvent('toast', {
-                                detail: { message: data.message, type: data.success ? 'success' : 'error' }
-                            }));
-                        })
-                        .catch(() => {
-                            loading = false;
-                            window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Test failed. Try again.', type: 'error' } }));
-                        })
-                    "
-                >
-                    <template x-if="loading">
-                        <span class="btn-spinner"></span>
-                    </template>
-                    <template x-if="!loading">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </template>
-                    <span x-text="loading ? 'Connecting...' : 'Test connection'"></span>
+                {{-- Test connection --}}
+                <button type="button" class="btn-outline" id="btn-test-connection" onclick="testConnection(this)">
+                    Test connection
                 </button>
 
             </div>
@@ -202,11 +172,26 @@
 
     </div>
 
-    {{-- Mobile responsive grid fix --}}
-    <style>
-        @media (max-width: 640px) {
-            .settings-grid { grid-template-columns: 1fr !important; }
-        }
-    </style>
+    <script>
+    function testConnection(btn) {
+        btn.disabled = true;
+        btn.textContent = 'Connecting...';
+        fetch('{{ route('settings.test') }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            window.showToast({ message: data.message, type: data.success ? 'success' : 'error' });
+        })
+        .catch(() => {
+            window.showToast({ message: 'Connection test failed. Try again.', type: 'error' });
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = 'Test connection';
+        });
+    }
+    </script>
 
 </x-app-layout>
