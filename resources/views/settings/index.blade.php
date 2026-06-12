@@ -71,16 +71,10 @@
 
                 {{-- Claude API key --}}
                 <div style="margin-bottom:1rem;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.4rem;">
+                    <div style="margin-bottom:0.4rem;">
                         <label style="font-size:0.8rem; font-weight:600; color:#0F0A1E;">
                             Claude API key <span style="color:#EF4444;">*</span>
                         </label>
-                        @if($user->anthropic_api_key)
-                        <span style="display:inline-flex;align-items:center;gap:4px;background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;border-radius:999px;padding:2px 8px;font-size:0.7rem;font-weight:600;">
-                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            Saved
-                        </span>
-                        @endif
                     </div>
                     <input
                         type="password"
