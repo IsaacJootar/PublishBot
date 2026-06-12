@@ -13,6 +13,8 @@ class UserSetting extends Model
     protected $fillable = [
         'user_id',
         'api_key_encrypted',
+        'groq_api_key',
+        'groq_model',
         'model',
         'web_search_tool_version',
         'max_tokens',
@@ -28,6 +30,7 @@ class UserSetting extends Model
     {
         return [
             'api_key_encrypted' => 'encrypted',
+            'groq_api_key' => 'encrypted',
             'max_tokens' => 'integer',
             'chapter_count' => 'integer',
             'words_per_chapter' => 'integer',

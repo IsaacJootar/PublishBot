@@ -32,6 +32,25 @@
                         class="pai-input" autocomplete="off" style="font-family:monospace;font-size:0.85rem;" />
                 </div>
 
+                {{-- Groq key (free fallback) --}}
+                <div style="margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                        <label style="font-size:0.8rem;font-weight:600;color:#0F0A1E;">
+                            Groq API key
+                            <span style="background:#ECFDF5;color:#065F46;border-radius:999px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:5px;">FREE</span>
+                        </label>
+                        @if($settings->groq_api_key)
+                        <span style="background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;border-radius:999px;padding:2px 8px;font-size:0.7rem;font-weight:600;">✓ Saved</span>
+                        @endif
+                    </div>
+                    <input type="password" name="groq_api_key"
+                        placeholder="{{ $settings->groq_api_key ? '•••••••••••••••••••• (leave blank to keep)' : 'gsk_...' }}"
+                        class="pai-input" autocomplete="off" style="font-family:monospace;font-size:0.85rem;" />
+                    <p style="font-size:0.75rem;color:#9B93B0;margin:0.3rem 0 0;">
+                        Free at <span style="font-family:monospace;background:#F5F4FF;padding:1px 5px;border-radius:4px;">console.groq.com</span> — runs Llama 3.3 70B. Used automatically if Claude is unavailable.
+                    </p>
+                </div>
+
                 {{-- Model --}}
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.8rem;font-weight:600;color:#0F0A1E;margin-bottom:0.4rem;">Model</label>

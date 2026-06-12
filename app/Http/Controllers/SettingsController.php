@@ -21,6 +21,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'api_key' => ['nullable', 'string', 'max:300'],
+            'groq_api_key' => ['nullable', 'string', 'max:300'],
             'model' => ['required', 'string'],
             'max_tokens' => ['required', 'integer', 'min:500', 'max:8000'],
             'chapter_count' => ['required', 'integer', 'min:6', 'max:12'],
@@ -49,6 +50,10 @@ class SettingsController extends Controller
 
         if ($request->filled('api_key')) {
             $data['api_key_encrypted'] = $request->api_key;
+        }
+
+        if ($request->filled('groq_api_key')) {
+            $data['groq_api_key'] = $request->groq_api_key;
         }
 
         $settings->update($data);
