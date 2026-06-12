@@ -1,205 +1,218 @@
 <x-app-layout>
     <x-slot name="title">Settings</x-slot>
 
-    <div class="max-w-2xl mx-auto space-y-6">
+    <div style="max-width: 680px;">
 
         {{-- Page header --}}
-        <div>
-            <h1 class="text-2xl font-bold text-base-content">Settings</h1>
-            <p class="text-base-content/60 mt-1">Configure your API keys and author profile.</p>
+        <div style="margin-bottom: 1.75rem;">
+            <h1 style="font-size:1.375rem; font-weight:800; color:#0F0A1E; margin:0 0 0.25rem;">Settings</h1>
+            <p style="font-size:0.875rem; color:#5C5470; margin:0;">Configure your API keys and author profile.</p>
         </div>
 
-        {{-- Author profile --}}
+        {{-- Author profile card --}}
         <form method="POST" action="{{ route('settings.update') }}">
             @csrf
-            <div class="card bg-base-100 border border-base-300 shadow-sm">
-                <div class="card-body space-y-4">
-                    <h2 class="font-semibold text-base-content">Author Profile</h2>
 
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text font-medium">Your name</span>
+            <div class="pai-card" style="margin-bottom: 1.25rem;">
+                <div style="margin-bottom: 1.25rem;">
+                    <h2 style="font-size:1rem; font-weight:700; color:#0F0A1E; margin:0 0 0.25rem;">Author Profile</h2>
+                    <p style="font-size:0.8rem; color:#9B93B0; margin:0;">Your name appears on book covers and exported documents.</p>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:0;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:600; color:#0F0A1E; margin-bottom:0.4rem;">
+                            Your name
                         </label>
                         <input
                             type="text"
                             name="author_name"
                             value="{{ old('author_name', $user->author_name) }}"
                             placeholder="e.g. Isaac Jootar"
-                            class="input input-bordered w-full"
+                            class="pai-input"
                         />
-                        <label class="label">
-                            <span class="label-text-alt text-base-content/50">Used in author bios and export documents.</span>
-                        </label>
                     </div>
-
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text font-medium">Pen name <span class="text-base-content/40">(optional)</span></span>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:600; color:#0F0A1E; margin-bottom:0.4rem;">
+                            Pen name <span style="color:#9B93B0; font-weight:400;">(optional)</span>
                         </label>
                         <input
                             type="text"
                             name="pen_name"
                             value="{{ old('pen_name', $user->pen_name) }}"
                             placeholder="e.g. I.J. Books"
-                            class="input input-bordered w-full"
+                            class="pai-input"
                         />
-                        <label class="label">
-                            <span class="label-text-alt text-base-content/50">The name that will appear on your book covers.</span>
-                        </label>
-                    </div>
-
-                    {{-- API Keys section --}}
-                    <div class="divider text-sm text-base-content/40">AI API Keys</div>
-
-                    <div class="rounded-xl p-4 space-y-1" style="background: #F0EBFF;">
-                        <p class="text-sm font-medium" style="color: #5A2EC9;">Where to get your API keys</p>
-                        <p class="text-xs" style="color: #5C5470;">
-                            Claude key: <span class="font-mono">console.anthropic.com</span> →
-                            API Keys → Create Key<br>
-                            OpenAI key: <span class="font-mono">platform.openai.com</span> →
-                            API Keys → Create key (optional fallback)
-                        </p>
-                    </div>
-
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text font-medium">Claude API key <span class="text-error">*</span></span>
-                            @if($user->anthropic_api_key)
-                                <span class="label-text-alt">
-                                    <span class="badge badge-success badge-sm gap-1">
-                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        Saved
-                                    </span>
-                                </span>
-                            @endif
-                        </label>
-                        <input
-                            type="password"
-                            name="anthropic_api_key"
-                            placeholder="{{ $user->anthropic_api_key ? '••••••••••••••••••••' : 'sk-ant-...' }}"
-                            class="input input-bordered w-full font-mono"
-                            autocomplete="off"
-                        />
-                        <label class="label">
-                            <span class="label-text-alt text-base-content/50">Leave blank to keep your current key.</span>
-                        </label>
-                    </div>
-
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text font-medium">
-                                OpenAI API key
-                                <span class="badge badge-ghost badge-sm ml-1">Backup AI</span>
-                            </span>
-                            @if($user->openai_api_key)
-                                <span class="label-text-alt">
-                                    <span class="badge badge-success badge-sm gap-1">
-                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        Saved
-                                    </span>
-                                </span>
-                            @endif
-                        </label>
-                        <input
-                            type="password"
-                            name="openai_api_key"
-                            placeholder="{{ $user->openai_api_key ? '••••••••••••••••••••' : 'sk-...' }}"
-                            class="input input-bordered w-full font-mono"
-                            autocomplete="off"
-                        />
-                        <label class="label">
-                            <span class="label-text-alt text-base-content/50">Used as a silent backup if Claude is unavailable.</span>
-                        </label>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-3 pt-2">
-                        <button
-                            type="submit"
-                            x-data="{ loading: false }"
-                            @click="loading = true"
-                            :class="loading ? 'btn btn-primary loading' : 'btn btn-primary'"
-                            :disabled="loading"
-                        >
-                            <span x-show="!loading">Save settings</span>
-                            <span x-show="loading">Saving...</span>
-                        </button>
-
-                        {{-- Test connection button --}}
-                        <button
-                            type="button"
-                            x-data="{ loading: false }"
-                            @click="
-                                loading = true;
-                                fetch('{{ route('settings.test') }}', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Accept': 'application/json'
-                                    }
-                                })
-                                .then(r => r.json())
-                                .then(data => {
-                                    loading = false;
-                                    window.dispatchEvent(new CustomEvent('toast', {
-                                        detail: {
-                                            message: data.message,
-                                            type: data.success ? 'success' : 'error'
-                                        }
-                                    }));
-                                })
-                                .catch(() => {
-                                    loading = false;
-                                    window.dispatchEvent(new CustomEvent('toast', {
-                                        detail: { message: 'Connection test failed. Try again.', type: 'error' }
-                                    }));
-                                })
-                            "
-                            :class="loading ? 'btn btn-outline loading' : 'btn btn-outline'"
-                            :disabled="loading"
-                        >
-                            <span x-show="!loading">Test connection</span>
-                            <span x-show="loading">Connecting...</span>
-                        </button>
                     </div>
                 </div>
+
+                @if ($errors->any())
+                    <div style="margin-top:0.75rem; padding:0.75rem 1rem; background:#FFF1F2; border:1px solid #FECDD3; border-radius:8px; color:#BE123C; font-size:0.825rem;">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+            </div>
+
+            {{-- API Keys card --}}
+            <div class="pai-card" style="margin-bottom: 1.25rem;">
+                <div style="margin-bottom: 1.25rem;">
+                    <h2 style="font-size:1rem; font-weight:700; color:#0F0A1E; margin:0 0 0.25rem;">AI API Keys</h2>
+                    <p style="font-size:0.8rem; color:#9B93B0; margin:0;">Keys are encrypted and never shown in plain text.</p>
+                </div>
+
+                {{-- Where to get keys --}}
+                <div style="background:#F0EBFF; border-radius:10px; padding:0.875rem 1rem; margin-bottom:1.25rem; border-left:3px solid #6C3CE1;">
+                    <p style="font-size:0.8rem; font-weight:600; color:#5A2EC9; margin:0 0 0.25rem;">Where to get your keys</p>
+                    <p style="font-size:0.78rem; color:#5C5470; margin:0; line-height:1.5;">
+                        Claude key → <span style="font-family:monospace; background:#E4E0F0; padding:1px 5px; border-radius:4px;">console.anthropic.com</span> &nbsp;·&nbsp;
+                        OpenAI key → <span style="font-family:monospace; background:#E4E0F0; padding:1px 5px; border-radius:4px;">platform.openai.com</span>
+                    </p>
+                </div>
+
+                {{-- Claude API key --}}
+                <div style="margin-bottom:1rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.4rem;">
+                        <label style="font-size:0.8rem; font-weight:600; color:#0F0A1E;">
+                            Claude API key <span style="color:#EF4444;">*</span>
+                        </label>
+                        @if($user->anthropic_api_key)
+                        <span style="display:inline-flex;align-items:center;gap:4px;background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;border-radius:999px;padding:2px 8px;font-size:0.7rem;font-weight:600;">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            Saved
+                        </span>
+                        @endif
+                    </div>
+                    <input
+                        type="password"
+                        name="anthropic_api_key"
+                        placeholder="{{ $user->anthropic_api_key ? '••••••••••••  (leave blank to keep current)' : 'sk-ant-api03-...' }}"
+                        class="pai-input"
+                        autocomplete="off"
+                        style="font-family: monospace; font-size: 0.85rem;"
+                    />
+                </div>
+
+                {{-- OpenAI key --}}
+                <div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.4rem;">
+                        <label style="font-size:0.8rem; font-weight:600; color:#0F0A1E;">
+                            OpenAI API key
+                            <span style="background:#F0EBFF;color:#5A2EC9;border-radius:999px;padding:1px 7px;font-size:0.68rem;font-weight:600;margin-left:5px;">Backup AI</span>
+                        </label>
+                        @if($user->openai_api_key)
+                        <span style="display:inline-flex;align-items:center;gap:4px;background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;border-radius:999px;padding:2px 8px;font-size:0.7rem;font-weight:600;">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            Saved
+                        </span>
+                        @endif
+                    </div>
+                    <input
+                        type="password"
+                        name="openai_api_key"
+                        placeholder="{{ $user->openai_api_key ? '••••••••••••  (leave blank to keep current)' : 'sk-...' }}"
+                        class="pai-input"
+                        autocomplete="off"
+                        style="font-family: monospace; font-size: 0.85rem;"
+                    />
+                    <p style="font-size:0.75rem; color:#9B93B0; margin:0.35rem 0 0;">Used silently if Claude is unavailable. Optional.</p>
+                </div>
+            </div>
+
+            {{-- Actions --}}
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem; margin-bottom:1.5rem;">
+                <button
+                    type="submit"
+                    x-data="{ loading: false }"
+                    @click="loading = true"
+                    :disabled="loading"
+                    class="btn-primary"
+                >
+                    <span x-show="!loading" style="display:flex;align-items:center;gap:6px;">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Save settings
+                    </span>
+                    <span x-show="loading" style="display:flex;align-items:center;gap:6px;" x-cloak>
+                        <span class="btn-spinner"></span> Saving...
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    x-data="{ loading: false }"
+                    @click="
+                        loading = true;
+                        fetch('{{ route('settings.test') }}', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            loading = false;
+                            window.dispatchEvent(new CustomEvent('toast', {
+                                detail: { message: data.message, type: data.success ? 'success' : 'error' }
+                            }));
+                        })
+                        .catch(() => {
+                            loading = false;
+                            window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Test failed. Try again.', type: 'error' } }));
+                        })
+                    "
+                    :disabled="loading"
+                    class="btn-outline"
+                >
+                    <span x-show="!loading" style="display:flex;align-items:center;gap:6px;">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Test connection
+                    </span>
+                    <span x-show="loading" style="display:flex;align-items:center;gap:6px;" x-cloak>
+                        <span class="btn-spinner"></span> Connecting...
+                    </span>
+                </button>
             </div>
         </form>
 
         {{-- Cost estimates --}}
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
-            <div class="card-body">
-                <h2 class="font-semibold text-base-content mb-3">Estimated AI costs per operation</h2>
-                <p class="text-sm text-base-content/60 mb-4">Based on Claude Sonnet pricing. Actual costs may vary slightly.</p>
-                <div class="overflow-x-auto">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th class="text-base-content/60">What you're doing</th>
-                                <th class="text-base-content/60 text-right">Est. cost</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach([
-                                ['Research — 10 title angles', '~$0.01'],
-                                ['Full chapter outline', '~$0.02'],
-                                ['One book chapter', '~$0.03'],
-                                ['Full 20-chapter book', '~$0.60'],
-                                ['KDP listing pack', '~$0.02'],
-                                ['Launch content pack', '~$0.03'],
-                                ['Full book end-to-end', '~$0.70'],
-                                ['Digital product end-to-end', '~$0.30'],
-                            ] as [$op, $cost])
-                            <tr>
-                                <td class="text-sm text-base-content">{{ $op }}</td>
-                                <td class="text-sm font-mono font-medium text-right" style="color: #5A2EC9;">{{ $cost }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-xs text-base-content/40 mt-3">A $5 API credit covers roughly 7 complete books or 15 digital products.</p>
+        <div class="pai-card">
+            <div style="margin-bottom:1rem;">
+                <h2 style="font-size:1rem; font-weight:700; color:#0F0A1E; margin:0 0 0.25rem;">Estimated AI costs</h2>
+                <p style="font-size:0.8rem; color:#9B93B0; margin:0;">Based on Claude Sonnet pricing. A $5 credit covers roughly 7 complete books.</p>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #E4E0F0;">
+                            <th style="text-align:left; padding:0.5rem 0; font-size:0.75rem; font-weight:600; color:#9B93B0; text-transform:uppercase; letter-spacing:0.05em;">Operation</th>
+                            <th style="text-align:right; padding:0.5rem 0; font-size:0.75rem; font-weight:600; color:#9B93B0; text-transform:uppercase; letter-spacing:0.05em;">Est. cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach([
+                            ['Research — 10 title angles', '~$0.01'],
+                            ['Full chapter outline', '~$0.02'],
+                            ['One book chapter', '~$0.03'],
+                            ['Full 20-chapter book', '~$0.60'],
+                            ['KDP listing pack', '~$0.02'],
+                            ['Launch content pack', '~$0.03'],
+                            ['Full book end-to-end', '~$0.70'],
+                            ['Digital product end-to-end', '~$0.30'],
+                        ] as [$op, $cost])
+                        <tr style="border-bottom:1px solid #F5F4FF;">
+                            <td style="padding:0.65rem 0; font-size:0.85rem; color:#0F0A1E;">{{ $op }}</td>
+                            <td style="padding:0.65rem 0; font-size:0.85rem; font-weight:700; color:#6C3CE1; text-align:right; font-family:monospace;">{{ $cost }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
 
     </div>
+
+    {{-- Mobile responsive grid fix --}}
+    <style>
+        @media (max-width: 640px) {
+            .settings-grid { grid-template-columns: 1fr !important; }
+        }
+    </style>
+
 </x-app-layout>
