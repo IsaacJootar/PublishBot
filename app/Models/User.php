@@ -14,50 +14,39 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'author_name',
-        'pen_name',
-        'anthropic_api_key',
-        'openai_api_key',
-        'onboarding_complete',
-    ];
+    protected $fillable = ['name', 'email', 'password'];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'anthropic_api_key' => 'encrypted',
-            'openai_api_key' => 'encrypted',
-            'onboarding_complete' => 'boolean',
         ];
     }
 
-    public function voiceProfiles(): HasMany
+    public function settings(): HasOne
     {
-        return $this->hasMany(VoiceProfile::class);
+        return $this->hasOne(UserSetting::class);
     }
 
-    public function defaultVoiceProfile(): HasOne
+    public function runs(): HasMany
     {
-        return $this->hasOne(VoiceProfile::class)->where('is_default', true);
+        return $this->hasMany(PipelineRun::class);
     }
 
-    public function projects(): HasMany
+    public function sales(): HasMany
     {
-        return $this->hasMany(Project::class);
+        return $this->hasMany(Sale::class);
     }
 
-    public function series(): HasMany
+    /** Get or create settings with defaults. */
+    public function getSettings(): UserSetting
     {
-        return $this->hasMany(Series::class);
+        return $this->settings()->firstOrCreate(
+            ['user_id' => $this->id],
+            UserSetting::defaults()
+        );
     }
 }
