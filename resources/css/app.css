@@ -19,30 +19,31 @@
 .pai-sidebar {
   width: 256px;
   min-width: 256px;
-  background: linear-gradient(165deg, #1A0D33 0%, #0D0719 100%);
+  background: linear-gradient(160deg, #1C1308 0%, #0E0B04 60%, #120C05 100%);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   flex-shrink: 0;
   position: relative;
   z-index: 30;
+  border-right: 1px solid rgba(245,158,11,0.08);
 }
 
-/* Ambient glow */
+/* Ambient glow — warm amber */
 .pai-sidebar::before {
   content: '';
   position: absolute;
-  top: -40px; left: -40px;
-  width: 160px; height: 160px;
-  background: radial-gradient(circle, rgba(108,60,225,0.4) 0%, transparent 70%);
+  top: -30px; left: -30px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 65%);
   pointer-events: none;
 }
 .pai-sidebar::after {
   content: '';
   position: absolute;
-  bottom: -20px; right: -30px;
-  width: 120px; height: 120px;
-  background: radial-gradient(circle, rgba(108,60,225,0.15) 0%, transparent 70%);
+  bottom: 60px; right: -20px;
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(217,119,6,0.1) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -51,23 +52,24 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.38);
   border-left: 3px solid transparent;
   transition: color 0.15s, background 0.15s;
   text-decoration: none;
+  margin-bottom: 1px;
 }
 .pai-nav-item:hover {
-  color: rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.05);
+  color: rgba(255,230,150,0.85);
+  background: rgba(245,158,11,0.07);
 }
 .pai-nav-item.active {
-  background: linear-gradient(90deg, rgba(108,60,225,0.45), rgba(108,60,225,0.15));
-  border-left-color: #6C3CE1;
-  color: #ffffff;
+  background: linear-gradient(90deg, rgba(245,158,11,0.22), rgba(245,158,11,0.06));
+  border-left-color: #F59E0B;
+  color: #FCD34D;
 }
 
 /* ── Main ── */

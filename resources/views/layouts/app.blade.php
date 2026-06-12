@@ -28,16 +28,16 @@
         </button>
 
         {{-- Logo --}}
-        <div style="padding: 1.5rem 1.25rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="padding: 1.5rem 1.25rem 1.25rem; border-bottom: 1px solid rgba(245,158,11,0.1);">
             <a href="{{ route('dashboard') }}" style="display:flex; align-items:center; gap:0.625rem; text-decoration:none;">
-                <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#6C3CE1,#4C2CA1);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(108,60,225,0.4);">
+                <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#D97706,#B45309);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(217,119,6,0.45);">
                     <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                 </div>
                 <div>
                     <div style="color:#fff;font-weight:800;font-size:1rem;line-height:1.1;">PublishAI</div>
-                    <div style="color:rgba(255,255,255,0.35);font-size:0.7rem;margin-top:1px;">Publishing Engine</div>
+                    <div style="color:rgba(255,210,100,0.4);font-size:0.7rem;margin-top:1px;">Publishing Engine</div>
                 </div>
             </a>
         </div>
@@ -76,9 +76,9 @@
 
         {{-- User footer --}}
         @auth
-        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding: 1rem 1rem;">
+        <div style="border-top: 1px solid rgba(245,158,11,0.1); padding: 1rem 1rem;">
             <div style="display:flex; align-items:center; gap:0.75rem;">
-                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6C3CE1,#4C2CA1);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0;">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#D97706,#B45309);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0;">
                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                 </div>
                 <div style="flex:1;min-width:0;">
