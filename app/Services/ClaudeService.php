@@ -87,7 +87,7 @@ class ClaudeService
             ]];
         }
 
-        $response = Http::withHeaders([
+        $response = Http::withoutVerifying()->withHeaders([
             'x-api-key' => $key,
             'anthropic-version' => '2023-06-01',
             'content-type' => 'application/json',
@@ -112,7 +112,7 @@ class ClaudeService
         }
 
         $model = $this->settings->groq_model ?: 'llama-3.3-70b-versatile';
-        $response = Http::withHeaders([
+        $response = Http::withoutVerifying()->withHeaders([
             'Authorization' => 'Bearer '.$key,
             'Content-Type' => 'application/json',
         ])->timeout(120)->post('https://api.groq.com/openai/v1/chat/completions', [
