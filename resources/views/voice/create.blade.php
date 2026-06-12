@@ -12,7 +12,7 @@
             <p style="font-size:0.875rem;color:#5C5470;margin:0;">Give this domain a name and a look. You'll upload writing samples on the next screen.</p>
         </div>
 
-        <form method="POST" action="{{ route('voice.store') }}">
+        <form method="POST" action="{{ route('voice.store') }}" onsubmit="document.getElementById('btn-create').textContent='Creating...';document.getElementById('btn-create').style.opacity='0.7';">
             @csrf
 
             <div class="pai-card">
@@ -87,8 +87,7 @@
                     <input type="hidden" name="is_default" id="is-default-val" value="{{ old('is_default', 0) }}">
                 </div>
 
-                <button type="submit" class="btn-primary" style="width:100%;" id="btn-create" onclick="this.disabled=true;this.innerHTML='Creating...'">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                <button type="submit" class="btn-primary" style="width:100%;" id="btn-create">
                     Create domain →
                 </button>
 
