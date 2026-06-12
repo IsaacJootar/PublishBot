@@ -120,8 +120,8 @@
         </div>
         <p style="font-size:0.95rem;font-weight:700;color:#0F0A1E;margin:0 0 0.4rem;">No runs yet</p>
         <p style="font-size:0.82rem;color:#9B93B0;margin:0 0 1.25rem;">Type a topic above and click Run pipeline to get started.</p>
-        @if(!$settings->api_key_encrypted)
-        <a href="{{ route('settings.index') }}" style="font-size:0.82rem;font-weight:600;color:#6C3CE1;text-decoration:none;">→ Add your API key in Settings first</a>
+        @if(!$settings->api_key_encrypted && !$settings->groq_api_key)
+        <a href="{{ route('settings.index') }}" style="font-size:0.82rem;font-weight:600;color:#6C3CE1;text-decoration:none;">→ Add your Claude or Groq API key in Settings first</a>
         @endif
     </div>
     @endif
