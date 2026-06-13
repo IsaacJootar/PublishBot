@@ -117,7 +117,7 @@ class RunController extends Controller
     }
 
     /** Download all output files as a zip. */
-    public function downloadAll(PipelineRun $pipelineRun): Response
+    public function downloadAll(PipelineRun $pipelineRun)
     {
         $this->authorise($pipelineRun);
 

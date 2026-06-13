@@ -40,9 +40,9 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         $settings = $user->getSettings();
-        if (! $settings->api_key_encrypted && ! $settings->groq_api_key) {
+        if (! $settings->api_key_encrypted) {
             return redirect()->route('settings.index')
-                ->with('toast', ['message' => 'Add your Claude or Groq API key in Settings first.', 'type' => 'warning']);
+                ->with('toast', ['message' => 'Add your Claude API key in Settings first.', 'type' => 'warning']);
         }
 
         $topic = trim($request->topic);
