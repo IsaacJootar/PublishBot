@@ -15,7 +15,8 @@ class Stage3bHandler extends BaseStageHandler
 
         $system = 'You are converting ebook chapters into structured workbook exercise pages. '
             .'Each page should be practical, actionable, and formatted for a printable PDF.'
-            .$this->voiceSuffix($run);
+            .$this->voiceSuffix($run)
+            .$this->seriesSuffix($run);
 
         $workbook = "WORKBOOK: {$run->topic}\n";
         $workbook .= 'GENERATED: '.now()->toDateTimeString()."\n";

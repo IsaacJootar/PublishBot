@@ -14,6 +14,7 @@ class PipelineRun extends Model
     protected $fillable = [
         'user_id',
         'voice_profile_id',
+        'series_id',
         'topic',
         'slug',
         'status',
@@ -44,6 +45,11 @@ class PipelineRun extends Model
     public function voiceProfile(): BelongsTo
     {
         return $this->belongsTo(VoiceProfile::class);
+    }
+
+    public function series(): BelongsTo
+    {
+        return $this->belongsTo(Series::class);
     }
 
     public function stages(): HasMany

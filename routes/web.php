@@ -5,6 +5,7 @@ use App\Http\Controllers\DigitalProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RunController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\SeriesController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\VoiceProfileController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{digitalProduct}/export/{format}', [DigitalProductController::class, 'export'])->name('export');
         Route::delete('/{digitalProduct}', [DigitalProductController::class, 'destroy'])->name('destroy');
     });
+
+    // My Series
+    Route::get('/series', [SeriesController::class, 'index'])->name('series.index');
+    Route::get('/series/create', [SeriesController::class, 'create'])->name('series.create');
+    Route::post('/series', [SeriesController::class, 'store'])->name('series.store');
+    Route::get('/series/{series}', [SeriesController::class, 'show'])->name('series.show');
+    Route::get('/series/{series}/edit', [SeriesController::class, 'edit'])->name('series.edit');
+    Route::patch('/series/{series}', [SeriesController::class, 'update'])->name('series.update');
+    Route::get('/series/{series}/plan', [SeriesController::class, 'planNext'])->name('series.plan');
+    Route::post('/series/{series}/plan', [SeriesController::class, 'storeNext'])->name('series.plan.store');
+    Route::post('/series/{series}/attach-run/{pipelineRun}', [SeriesController::class, 'attachRun'])->name('series.attach-run');
+    Route::delete('/series/{series}/detach-run/{pipelineRun}', [SeriesController::class, 'detachRun'])->name('series.detach-run');
+    Route::delete('/series/{series}', [SeriesController::class, 'destroy'])->name('series.destroy');
 
     // My Voice
     Route::get('/voice', [VoiceProfileController::class, 'index'])->name('voice.index');

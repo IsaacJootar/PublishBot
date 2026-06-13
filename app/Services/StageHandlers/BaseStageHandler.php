@@ -41,4 +41,15 @@ abstract class BaseStageHandler
             ."Write in this author's exact voice for this domain. "
             .'Sound like they personally wrote this. Not like an AI.';
     }
+
+    /** Build a series-context suffix appended to system prompts when run belongs to a series. */
+    protected function seriesSuffix(PipelineRun $run): string
+    {
+        $series = $run->series;
+        if (! $series) {
+            return '';
+        }
+
+        return $series->promptContext();
+    }
 }
