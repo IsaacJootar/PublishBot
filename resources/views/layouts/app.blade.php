@@ -116,13 +116,13 @@
 
         {{-- Topbar --}}
         <header class="pai-topbar">
-            <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;flex:1;">
                 <button class="pai-hamburger" onclick="openSidebar()" aria-label="Open menu">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                <span style="font-weight:700;color:#0F0A1E;font-size:0.95rem;">
+                <span style="font-weight:700;color:#0F0A1E;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">
                     {{ $title ?? 'Dashboard' }}
                 </span>
             </div>

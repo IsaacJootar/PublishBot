@@ -78,11 +78,19 @@
             ⏳ Training in progress — page will refresh when done.
         </div>
         <script>
-        setInterval(() => {
-            fetch('{{ route('voice.status', $profile) }}')
-                .then(r => r.json())
-                .then(d => { if (d.status === 'ready' || d.status === 'failed') location.reload(); });
-        }, 3000);
+        (function() {
+            const tick = setInterval(() => {
+                fetch('{{ route('voice.status', $profile) }}')
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.status === 'ready' || d.status === 'failed') {
+                            clearInterval(tick);
+                            location.reload();
+                        }
+                    })
+                    .catch(() => {});
+            }, 3000);
+        })();
         </script>
         @endif
         @if($profile->status === 'failed' && $profile->error_message)

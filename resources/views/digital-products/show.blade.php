@@ -59,18 +59,22 @@
 
     @if($busy)
     <script>
-    setInterval(() => {
-        fetch('{{ route('digital-products.status', $product) }}')
-            .then(r => r.json())
-            .then(d => {
-                if (d.status !== '{{ $product->status }}' || d.current_stage !== {{ $product->current_stage }}) {
-                    location.reload();
-                }
-                if (d.progress_note) {
-                    document.querySelectorAll('.dp-progress-note').forEach(el => el.textContent = d.progress_note);
-                }
-            });
-    }, 3000);
+    (function() {
+        const tick = setInterval(() => {
+            fetch('{{ route('digital-products.status', $product) }}')
+                .then(r => r.json())
+                .then(d => {
+                    if (d.status !== '{{ $product->status }}' || d.current_stage !== {{ $product->current_stage }}) {
+                        clearInterval(tick);
+                        location.reload();
+                    }
+                    if (d.progress_note) {
+                        document.querySelectorAll('.dp-progress-note').forEach(el => el.textContent = d.progress_note);
+                    }
+                })
+                .catch(() => {});
+        }, 3000);
+    })();
     </script>
     @endif
 

@@ -59,22 +59,37 @@
                 </button>
             </div>
 
-            {{-- Voice picker --}}
-            @if($voices->isNotEmpty())
-            <div style="margin-top:0.85rem;display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-                <label for="voice-select" style="font-size:0.75rem;font-weight:600;color:#5C5470;">Write in voice:</label>
-                <select name="voice_profile_id" id="voice-select" class="pai-input" style="max-width:280px;font-size:0.8rem;padding:0.4rem 0.6rem;cursor:pointer;">
-                    <option value="">— No voice profile —</option>
-                    @foreach($voices as $v)
-                    <option value="{{ $v->id }}" {{ $defaultVoiceId === $v->id ? 'selected' : '' }}>
-                        {{ $v->emoji }} {{ $v->name }} {{ $v->is_default ? '(default)' : '' }} {{ $v->extracted_style ? '' : '— untrained' }}
-                    </option>
-                    @endforeach
-                </select>
-                <a href="{{ route('voice.index') }}" style="font-size:0.72rem;color:#6C3CE1;text-decoration:none;font-weight:600;">Manage voices →</a>
+            {{-- Voice + Series pickers --}}
+            <div style="margin-top:0.85rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+                @if($voices->isNotEmpty())
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;flex:1;min-width:240px;">
+                    <label for="voice-select" style="font-size:0.75rem;font-weight:600;color:#5C5470;white-space:nowrap;">🎙 Voice:</label>
+                    <select name="voice_profile_id" id="voice-select" class="pai-input" style="flex:1;min-width:160px;font-size:0.8rem;padding:0.4rem 0.6rem;cursor:pointer;">
+                        <option value="">— None —</option>
+                        @foreach($voices as $v)
+                        <option value="{{ $v->id }}" {{ $defaultVoiceId === $v->id ? 'selected' : '' }}>
+                            {{ $v->emoji }} {{ $v->name }} {{ $v->is_default ? '★' : '' }}{{ $v->extracted_style ? '' : ' (untrained)' }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
+                @if($seriesList->isNotEmpty())
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;flex:1;min-width:240px;">
+                    <label for="series-select" style="font-size:0.75rem;font-weight:600;color:#5C5470;white-space:nowrap;">📚 Series:</label>
+                    <select name="series_id" id="series-select" class="pai-input" style="flex:1;min-width:160px;font-size:0.8rem;padding:0.4rem 0.6rem;cursor:pointer;">
+                        <option value="">— None —</option>
+                        @foreach($seriesList as $s)
+                        <option value="{{ $s->id }}">{{ $s->emoji }} {{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
             </div>
-            @else
-            <div style="margin-top:0.85rem;background:#FFFBEB;color:#92400E;border-left:3px solid #F59E0B;border-radius:8px;padding:0.55rem 0.8rem;font-size:0.75rem;">
+
+            @if($voices->isEmpty())
+            <div style="margin-top:0.65rem;background:#FFFBEB;color:#92400E;border-left:3px solid #F59E0B;border-radius:8px;padding:0.55rem 0.8rem;font-size:0.75rem;">
                 💡 Train a voice profile to make every ebook sound like you. <a href="{{ route('voice.index') }}" style="color:#92400E;font-weight:700;text-decoration:underline;">Set up My Voice →</a>
             </div>
             @endif

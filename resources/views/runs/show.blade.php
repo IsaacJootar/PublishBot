@@ -10,8 +10,19 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                     History
                 </a>
-                <h1 style="font-size:1.2rem;font-weight:800;color:#0F0A1E;margin:0 0 0.2rem;">{{ $run->topic }}</h1>
+                <h1 style="font-size:1.2rem;font-weight:800;color:#0F0A1E;margin:0 0 0.2rem;line-height:1.25;word-break:break-word;">{{ $run->topic }}</h1>
                 <p style="font-size:0.78rem;color:#9B93B0;margin:0;">Started {{ $run->created_at->diffForHumans() }}</p>
+                @php $vp = $run->voiceProfile; $sr = $run->series; @endphp
+                @if($vp || $sr)
+                <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.5rem;">
+                    @if($vp)
+                    <a href="{{ route('voice.show', $vp) }}" style="background:#F0EBFF;color:#5A2EC9;border-radius:999px;padding:2px 9px;font-size:0.7rem;font-weight:600;text-decoration:none;">🎙 {{ $vp->emoji }} {{ $vp->name }}</a>
+                    @endif
+                    @if($sr)
+                    <a href="{{ route('series.show', $sr) }}" style="background:{{ $sr->color }}1A;color:{{ $sr->color }};border-radius:999px;padding:2px 9px;font-size:0.7rem;font-weight:600;text-decoration:none;">📚 {{ $sr->emoji }} {{ $sr->name }}</a>
+                    @endif
+                </div>
+                @endif
             </div>
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <form method="POST" action="{{ route('runs.rerun', $run) }}">
@@ -36,8 +47,32 @@
             @endforelse
         </div>
 
-        {{-- Validation report panel — populated by JS --}}
-        <div id="validation-panel" style="display:{{ $run->validation_report ? 'block' : 'none' }};margin-bottom:1.5rem;"></div>
+        {{-- Validation report panel — pre-rendered if available, also updated by JS --}}
+        <div id="validation-panel" style="display:{{ $run->validation_report ? 'block' : 'none' }};margin-bottom:1.5rem;">
+            @if($run->validation_report)
+            @php
+                $isNoGo = $run->validation_result === 'no_go';
+                $border = $isNoGo ? '#FCA5A5' : '#6EE7B7';
+                $bg = $isNoGo ? '#FFF1F2' : '#ECFDF5';
+                $resultColor = $isNoGo ? '#BE123C' : '#065F46';
+                $resultLabel = $isNoGo ? '⚠ No-Go' : '✓ Go';
+            @endphp
+            <div class="pai-card" style="border:2px solid {{ $border }};background:{{ $bg }};">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;flex-wrap:wrap;gap:0.5rem;">
+                    <p style="font-size:0.9rem;font-weight:700;color:#0F0A1E;margin:0;">Stage 1 — Market Validation Report</p>
+                    <span style="font-size:0.8rem;font-weight:700;color:{{ $resultColor }};background:white;border-radius:999px;padding:3px 12px;border:1px solid {{ $border }};">{{ $resultLabel }}</span>
+                </div>
+                <pre style="white-space:pre-wrap;font-family:inherit;font-size:0.8rem;color:#0F0A1E;line-height:1.65;margin:0;max-height:400px;overflow-y:auto;">{{ $run->validation_report }}</pre>
+                @if(! $run->user_confirmed_continue && $run->status === 'paused')
+                <div style="margin-top:1rem;">
+                    <button id="continue-btn" onclick="continueRun()" class="btn-primary" style="font-size:0.85rem;">
+                        {{ $isNoGo ? 'Continue anyway →' : 'Looks good — continue →' }}
+                    </button>
+                </div>
+                @endif
+            </div>
+            @endif
+        </div>
 
         {{-- Export buttons (shown when completed) --}}
         <div id="download-all-panel" style="display:{{ $run->status === 'completed' ? 'block' : 'none' }};">
