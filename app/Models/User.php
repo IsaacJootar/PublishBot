@@ -46,6 +46,11 @@ class User extends Authenticatable
         return $this->hasMany(VoiceProfile::class);
     }
 
+    public function digitalProducts(): HasMany
+    {
+        return $this->hasMany(DigitalProduct::class);
+    }
+
     public function defaultVoiceProfile(): ?VoiceProfile
     {
         return $this->voiceProfiles()->where('is_default', true)->first();

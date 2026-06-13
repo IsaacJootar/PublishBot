@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DigitalProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RunController;
 use App\Http\Controllers\SalesController;
@@ -30,6 +31,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
     Route::delete('/sales/{sale}', [SalesController::class, 'destroy'])->name('sales.destroy');
+
+    // Digital Products Factory
+    Route::prefix('digital-products')->name('digital-products.')->group(function () {
+        Route::get('/', [DigitalProductController::class, 'index'])->name('index');
+        Route::get('/create/{type}', [DigitalProductController::class, 'create'])->name('create');
+        Route::post('/', [DigitalProductController::class, 'store'])->name('store');
+        Route::get('/{digitalProduct}', [DigitalProductController::class, 'show'])->name('show');
+        Route::get('/{digitalProduct}/status', [DigitalProductController::class, 'status'])->name('status');
+        Route::post('/{digitalProduct}/advance', [DigitalProductController::class, 'advance'])->name('advance');
+        Route::post('/{digitalProduct}/regenerate/{stage}', [DigitalProductController::class, 'regenerate'])->name('regenerate');
+        Route::patch('/{digitalProduct}/edit-field', [DigitalProductController::class, 'editField'])->name('edit-field');
+        Route::get('/{digitalProduct}/download', [DigitalProductController::class, 'download'])->name('download');
+        Route::delete('/{digitalProduct}', [DigitalProductController::class, 'destroy'])->name('destroy');
+    });
 
     // My Voice
     Route::get('/voice', [VoiceProfileController::class, 'index'])->name('voice.index');
