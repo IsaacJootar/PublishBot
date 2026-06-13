@@ -67,6 +67,60 @@
                     <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Paperback: $9.99–$19.99</span>
                 </div>
 
+                {{-- Cover Brief for Canva --}}
+                @php
+                    $coverTitle = \Illuminate\Support\Str::title($run->topic);
+                    $coverBrief = "BOOK COVER BRIEF — {$coverTitle}\n\n"
+                        ."Style: Clean, modern, type-driven non-fiction cover with bold title hierarchy. Strong typographic contrast.\n"
+                        ."Colours: Deep brand purple #1A0D33 background with violet accent #6C3CE1 for title or geometric shape.\n"
+                        ."Mood: Confident, focused, premium — feels like a buy-now book on Kindle.\n\n"
+                        ."Required sizes:\n"
+                        ."- Amazon KDP: 2560 x 1600 px JPG\n"
+                        ."- Gumroad / Selar / Payhip: 1280 x 720 px JPG or PNG\n"
+                        ."- Etsy: 2000 x 2000 px JPG or PNG\n\n"
+                        ."Steps: canva.com → search 'book cover' or 'ebook cover' templates → pick one → apply this brief → export JPG → upload to each platform.";
+                @endphp
+                <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-bottom:0.75rem;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                        <p style="font-size:0.78rem;font-weight:700;color:#92400E;margin:0;">🟧 Your action needed — Cover Brief for Canva</p>
+                        <button type="button" id="copy-cover-brief" onclick="copyCoverBrief()" class="btn-outline" style="padding:0.3rem 0.7rem;font-size:0.7rem;">Copy brief</button>
+                    </div>
+                    <div style="background:#fff;border:1px solid #FDE68A;border-radius:6px;padding:0.7rem 0.85rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
+                        <p style="margin:0 0 0.3rem;"><strong>Title:</strong> {{ $coverTitle }}</p>
+                        <p style="margin:0 0 0.3rem;"><strong>Style:</strong> Clean, modern, type-driven non-fiction cover with bold title hierarchy.</p>
+                        <p style="margin:0 0 0.3rem;"><strong>Colours:</strong>
+                            <span style="display:inline-block;width:11px;height:11px;background:#1A0D33;border-radius:2px;vertical-align:middle;border:1px solid #ddd;"></span>
+                            <code style="font-size:0.7rem;">#1A0D33</code>
+                            +
+                            <span style="display:inline-block;width:11px;height:11px;background:#6C3CE1;border-radius:2px;vertical-align:middle;"></span>
+                            <code style="font-size:0.7rem;">#6C3CE1</code>
+                        </p>
+                        <p style="margin:0 0 0.5rem;"><strong>Mood:</strong> Confident, focused, premium — feels like a buy-now book on Kindle.</p>
+                        <p style="margin:0 0 0.2rem;font-weight:700;color:#92400E;">Required sizes:</p>
+                        <ul style="margin:0 0 0.5rem;padding-left:1.2rem;">
+                            <li>Amazon KDP: <strong>2560 × 1600 px</strong> JPG</li>
+                            <li>Gumroad / Selar / Payhip: <strong>1280 × 720 px</strong> JPG or PNG</li>
+                            <li>Etsy: <strong>2000 × 2000 px</strong> JPG or PNG</li>
+                        </ul>
+                        <p style="margin:0;font-style:italic;color:#92400E;">Go to canva.com → search book cover or ebook cover templates → pick one → apply this brief → export JPG → upload to each platform.</p>
+                    </div>
+                    <textarea id="cover-brief-text" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">{{ $coverBrief }}</textarea>
+                </div>
+                <script>
+                function copyCoverBrief() {
+                    const ta = document.getElementById('cover-brief-text');
+                    ta.style.position = 'fixed'; ta.style.left = '0'; ta.style.top = '0';
+                    ta.select();
+                    try { document.execCommand('copy'); window.showToast && window.showToast({message:'Cover brief copied.', type:'success'}); }
+                    catch (e) { window.showToast && window.showToast({message:'Copy failed — select manually.', type:'error'}); }
+                    ta.style.position = 'absolute'; ta.style.left = '-9999px';
+                    const btn = document.getElementById('copy-cover-brief');
+                    const original = btn.textContent;
+                    btn.textContent = '✓ Copied';
+                    setTimeout(() => btn.textContent = original, 1800);
+                }
+                </script>
+
                 {{-- Amazon KDP upload steps --}}
                 <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;">
                     <p style="font-size:0.78rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to Amazon KDP</p>
