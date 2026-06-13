@@ -7,10 +7,10 @@ use App\Jobs\DigitalProducts\PublishPackJob;
 use App\Jobs\DigitalProducts\ResearchJob;
 use App\Jobs\DigitalProducts\StructureJob;
 use App\Models\DigitalProduct;
+use App\Services\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -187,30 +187,50 @@ class DigitalProductController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function download(DigitalProduct $digitalProduct): Response
+    public function export(DigitalProduct $digitalProduct, string $format, ExportService $export)
     {
         $this->authorise($digitalProduct);
+        abort_unless(in_array($format, ['premium', 'kdp', 'master']), 404);
+        abort_if(! $digitalProduct->content_output, 404, 'Content not generated yet.');
 
-        $text = "PRODUCT: {$digitalProduct->product_title}\n"
-            ."TYPE: {$digitalProduct->product_type}\n"
-            ."NICHE: {$digitalProduct->niche}\n"
-            .'GENERATED: '.optional($digitalProduct->updated_at)->toDateTimeString()."\n"
-            .str_repeat('=', 60)."\n\n"
-            .'--- RESEARCH ---'."\n"
-            .json_encode($digitalProduct->research_output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n\n"
-            .'--- STRUCTURE ---'."\n"
-            .json_encode($digitalProduct->structure_output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n\n"
-            .'--- CONTENT ---'."\n"
-            .$digitalProduct->content_output."\n\n"
-            .'--- PUBLISH PACK ---'."\n"
-            .json_encode($digitalProduct->publish_pack, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n";
+        $title = $digitalProduct->product_title ?: Str::title($digitalProduct->niche);
+        $author = $digitalProduct->user->getSettings()->author_name ?: $digitalProduct->user->name;
+        $subtitle = $digitalProduct->structure_output['tagline'] ?? null;
+        $sections = $this->parseSections($digitalProduct);
 
-        $slug = Str::slug($digitalProduct->product_title ?: $digitalProduct->niche);
+        $relDir = "users/{$digitalProduct->user_id}/digital-products/{$digitalProduct->id}";
 
-        return response($text, 200, [
-            'Content-Type' => 'text/plain; charset=utf-8',
-            'Content-Disposition' => "attachment; filename=\"{$slug}.txt\"",
-        ]);
+        $absolute = match ($format) {
+            'premium' => $export->exportPremiumPdf("{$relDir}/premium.pdf", $title, $author, $subtitle, $sections),
+            'kdp' => $export->exportKdpDocx("{$relDir}/kdp-version.docx", $title, $author, $subtitle, $sections),
+            'master' => $export->exportMasterDocx("{$relDir}/master.docx", $title, $author, $subtitle, $sections),
+        };
+
+        return response()->download($absolute, basename($absolute));
+    }
+
+    private function parseSections(DigitalProduct $product): array
+    {
+        $raw = (string) $product->content_output;
+        $sections = [];
+
+        if (preg_match_all('/^(CATEGORY|SOP|SEQUENCE)\s+\d+:\s*(.+)$/m', $raw, $matches, PREG_OFFSET_CAPTURE)) {
+            $count = count($matches[0]);
+            for ($i = 0; $i < $count; $i++) {
+                $title = trim($matches[2][$i][0]);
+                $start = $matches[0][$i][1] + strlen($matches[0][$i][0]);
+                $end = $i + 1 < $count ? $matches[0][$i + 1][1] : strlen($raw);
+                $body = trim(substr($raw, $start, $end - $start));
+                $body = preg_replace("/^\s*-{3,}\s*\n/", '', $body);
+                $sections[] = ['title' => $title, 'body' => $body];
+            }
+        }
+
+        if (! $sections) {
+            $sections[] = ['title' => $product->structure_output['product_title'] ?? 'Content', 'body' => $raw];
+        }
+
+        return $sections;
     }
 
     public function destroy(DigitalProduct $digitalProduct): RedirectResponse

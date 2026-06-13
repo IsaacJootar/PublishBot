@@ -25,7 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/runs/{pipelineRun}/rerun', [RunController::class, 'rerun'])->name('runs.rerun');
     Route::delete('/runs/{pipelineRun}', [RunController::class, 'destroy'])->name('runs.destroy');
     Route::get('/runs/{pipelineRun}/files/{filename}', [RunController::class, 'file'])->name('runs.file');
-    Route::get('/runs/{pipelineRun}/download-all', [RunController::class, 'downloadAll'])->name('runs.download-all');
+    Route::get('/runs/{pipelineRun}/export/{format}', [RunController::class, 'exportEbook'])->name('runs.export');
 
     // Sales
     Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{digitalProduct}/advance', [DigitalProductController::class, 'advance'])->name('advance');
         Route::post('/{digitalProduct}/regenerate/{stage}', [DigitalProductController::class, 'regenerate'])->name('regenerate');
         Route::patch('/{digitalProduct}/edit-field', [DigitalProductController::class, 'editField'])->name('edit-field');
-        Route::get('/{digitalProduct}/download', [DigitalProductController::class, 'download'])->name('download');
+        Route::get('/{digitalProduct}/export/{format}', [DigitalProductController::class, 'export'])->name('export');
         Route::delete('/{digitalProduct}', [DigitalProductController::class, 'destroy'])->name('destroy');
     });
 

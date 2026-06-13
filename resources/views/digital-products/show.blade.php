@@ -217,7 +217,6 @@
                     @csrf
                     <button type="submit" class="btn-outline" style="padding:0.4rem 0.85rem;font-size:0.75rem;" {{ $busy ? 'disabled' : '' }}>Regenerate</button>
                 </form>
-                <a href="{{ route('digital-products.download', $product) }}" class="btn-primary" style="padding:0.4rem 0.85rem;font-size:0.75rem;">Download all →</a>
             </div>
         </div>
 
@@ -275,16 +274,58 @@
         </details>
         @endif
 
+        {{-- Download buttons --}}
+        <div style="border-top:1px solid #E4E0F0;margin-top:1rem;padding-top:1rem;">
+            <p style="font-size:0.85rem;font-weight:700;color:#0F0A1E;margin:0 0 0.5rem;">📥 Download your product</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.5rem;">
+                <a href="{{ route('digital-products.export', [$product, 'premium']) }}" class="btn-primary" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
+                    📄 Premium PDF
+                    <div style="font-size:0.65rem;font-weight:500;opacity:0.85;margin-top:2px;">Gumroad · Selar · Payhip</div>
+                </a>
+                <a href="{{ route('digital-products.export', [$product, 'kdp']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
+                    📦 KDP Word File
+                    <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">Amazon KDP upload</div>
+                </a>
+                <a href="{{ route('digital-products.export', [$product, 'master']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
+                    ✏️ Master DOCX
+                    <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">For your own edits</div>
+                </a>
+            </div>
+        </div>
+
+        {{-- Pricing strip --}}
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:center;margin-top:1rem;">
+            <span style="background:#ECFDF5;color:#065F46;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Gumroad / Selar / Payhip: $37–$147</span>
+            <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Amazon Kindle: $9.99</span>
+            <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Paperback: $19.99–$24.99</span>
+        </div>
+
+        {{-- Native platform upload steps --}}
         @if(isset($pk['platform_upload_steps']))
-        <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.75rem 0.9rem;margin-top:0.85rem;">
-            <p style="font-size:0.8rem;font-weight:700;color:#92400E;margin:0 0 0.3rem;">📤 Your action: upload to {{ ucfirst($product->recommended_platform ?: 'Gumroad') }}</p>
-            <ol style="margin:0;padding-left:1.2rem;font-size:0.78rem;color:#5C5470;line-height:1.6;">
+        <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-top:1rem;">
+            <p style="font-size:0.8rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to {{ ucfirst($product->recommended_platform ?: 'Gumroad') }}</p>
+            <ol style="margin:0;padding-left:1.2rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
                 @foreach($pk['platform_upload_steps'] as $step)
                 <li>{{ $step }}</li>
                 @endforeach
             </ol>
         </div>
         @endif
+
+        {{-- Amazon KDP upload steps --}}
+        <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-top:0.75rem;">
+            <p style="font-size:0.8rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to Amazon KDP</p>
+            <ol style="margin:0;padding-left:1.2rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
+                <li>Go to <strong>kdp.amazon.com</strong> and sign in</li>
+                <li>Click <strong>Add new title → Kindle ebook</strong> or <strong>Paperback</strong></li>
+                <li>Fill title and description from the listing generated above</li>
+                <li>Upload <strong>kdp-version.docx</strong> as the manuscript</li>
+                <li>Upload a cover image (use Canva or Midjourney)</li>
+                <li>Set Kindle price <strong>$9.99</strong> · Paperback <strong>$19.99–$24.99</strong></li>
+                <li>Click <strong>Publish</strong> — live within 24–72 hours</li>
+                <li>Set up <strong>Payoneer</strong> at payoneer.com to receive royalties</li>
+            </ol>
+        </div>
     </div>
     @endif
 

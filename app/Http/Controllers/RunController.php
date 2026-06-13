@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Jobs\RunPipelineStageJob;
 use App\Models\PipelineRun;
+use App\Services\ExportService;
 use App\Services\PipelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
-use ZipArchive;
 
 class RunController extends Controller
 {
@@ -116,25 +117,68 @@ class RunController extends Controller
         ]);
     }
 
-    /** Download all output files as a zip. */
-    public function downloadAll(PipelineRun $pipelineRun)
+    /** Download premium PDF / KDP DOCX / Master DOCX. */
+    public function exportEbook(PipelineRun $pipelineRun, string $format, ExportService $export)
     {
         $this->authorise($pipelineRun);
+        abort_unless(in_array($format, ['premium', 'kdp', 'master']), 404);
 
-        $zipPath = sys_get_temp_dir().'/'."{$pipelineRun->slug}.zip";
-        $zip = new ZipArchive;
-        $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $draft = Storage::disk('local')->get("outputs/{$pipelineRun->user_id}/{$pipelineRun->output_path}/03-ebook-draft.txt");
+        abort_if(! $draft, 404, 'Ebook draft not found.');
 
-        foreach (PipelineService::STAGES as $def) {
-            $path = "outputs/{$pipelineRun->user_id}/{$pipelineRun->output_path}/{$def['file']}";
-            if (Storage::disk('local')->exists($path)) {
-                $zip->addFromString($def['file'], Storage::disk('local')->get($path));
+        $chapters = $this->parseChapters($draft);
+        $author = $pipelineRun->user->getSettings()->author_name ?: $pipelineRun->user->name;
+        $title = Str::title($pipelineRun->topic);
+        $subtitle = null;
+
+        $slug = $pipelineRun->slug;
+        $relDir = "users/{$pipelineRun->user_id}/manuscripts/{$pipelineRun->id}";
+
+        $absolute = match ($format) {
+            'premium' => $export->exportPremiumPdf("{$relDir}/ebook-premium.pdf", $title, $author, $subtitle, $chapters),
+            'kdp' => $export->exportKdpDocx("{$relDir}/ebook-kdp.docx", $title, $author, $subtitle, $chapters),
+            'master' => $export->exportMasterDocx("{$relDir}/ebook-master.docx", $title, $author, $subtitle, $chapters),
+        };
+
+        $filename = basename($absolute);
+
+        return response()->download($absolute, $filename);
+    }
+
+    private function parseChapters(string $draft): array
+    {
+        // Split by "CHAPTER N: Title" markers
+        $lines = preg_split("/\r\n|\n/", $draft);
+        $chapters = [];
+        $current = null;
+
+        foreach ($lines as $line) {
+            if (preg_match('/^CHAPTER\s+\d+:\s*(.+)/i', trim($line), $m)) {
+                if ($current) {
+                    $chapters[] = $current;
+                }
+                $current = ['title' => trim($m[1]), 'body' => ''];
+            } elseif ($current !== null) {
+                if (preg_match('/^[-=]{3,}\s*$/', trim($line))) {
+                    continue; // skip divider lines
+                }
+                $current['body'] .= $line."\n";
             }
         }
 
-        $zip->close();
+        if ($current) {
+            $chapters[] = $current;
+        }
 
-        return response()->download($zipPath, "{$pipelineRun->slug}.zip")->deleteFileAfterSend();
+        if (! $chapters) {
+            $chapters[] = ['title' => 'Chapter 1', 'body' => $draft];
+        }
+
+        foreach ($chapters as &$c) {
+            $c['body'] = trim($c['body']);
+        }
+
+        return $chapters;
     }
 
     /** Re-run: create a new pipeline run for the same topic. */

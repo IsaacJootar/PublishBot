@@ -1,0 +1,61 @@
+# Update 01 — Amazon KDP Export + Platform Fix
+
+## What to update — Digital Products Factory only
+## Do NOT touch any already-built ebook pipeline code
+
+---
+
+## Change 1 — Export (replace plain text output)
+
+The digital products export must produce THREE files not plain text:
+
+**File 1: premium.pdf** (for Gumroad / Selar / Payhip)
+- Cover page: product title, author name, tagline, brand colours
+- Auto-generated table of contents
+- Each section as heading, items formatted cleanly underneath
+- Page numbers in footer
+- Convert via existing ExportService.php using Pandoc
+
+**File 2: kdp-version.docx** (for Amazon KDP upload)
+- Times New Roman 12pt body text
+- 1 inch margins all sides
+- Chapter-based structure
+- No custom headers or footers
+- Ready to upload directly to kdp.amazon.com
+
+**File 3: master.docx** (user keeps for editing)
+- Same as premium version but editable DOCX
+
+Save all three to:
+storage/app/users/{user_id}/digital-products/{product_id}/
+
+Show three download buttons on Stage 5:
+[Download Premium PDF] [Download KDP Word File] [Download Master DOCX]
+
+---
+
+## Change 2 — Platform upload instructions (Stage 5)
+
+Amazon KDP is a PRIMARY platform. Add full KDP upload steps:
+1. Go to kdp.amazon.com and sign in
+2. Click Add new title → Kindle ebook OR Paperback
+3. Fill title and description from the listing above
+4. Upload kdp-version.docx as the manuscript
+5. Upload a cover image (Canva or Midjourney)
+6. Set Kindle price $9.99 · Paperback price $19.99
+7. Click Publish — live within 24-72 hours
+8. Set up Payoneer at payoneer.com to receive royalties
+
+Show platform pricing clearly on Stage 5:
+Gumroad / Selar: $37–$147 · Amazon Kindle: $9.99 · Paperback: $19.99
+
+All upload instructions use orange "Your action needed" badge.
+
+---
+
+## What NOT to change
+- Do not touch any ebook pipeline code
+- Do not touch voice profiles
+- Do not touch existing migrations already run
+- Do not restart or redo any completed phases
+- Only add/modify the digital products export and Stage 5 view

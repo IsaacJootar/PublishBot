@@ -39,15 +39,50 @@
         {{-- Validation report panel — populated by JS --}}
         <div id="validation-panel" style="display:{{ $run->validation_report ? 'block' : 'none' }};margin-bottom:1.5rem;"></div>
 
-        {{-- Download All (shown when completed) --}}
+        {{-- Export buttons (shown when completed) --}}
         <div id="download-all-panel" style="display:{{ $run->status === 'completed' ? 'block' : 'none' }};">
-            <div class="pai-card" style="border:2px solid #10B981;text-align:center;padding:1.5rem;">
-                <p style="font-size:1rem;font-weight:800;color:#0F0A1E;margin:0 0 0.25rem;">Pipeline complete 🎉</p>
-                <p style="font-size:0.82rem;color:#5C5470;margin:0 0 1.25rem;">All 5 output files are ready.</p>
-                <a href="{{ route('runs.download-all', $run) }}" class="btn-primary" style="text-decoration:none;">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Download all files (.zip)
-                </a>
+            <div class="pai-card" style="border:2px solid #10B981;padding:1.5rem;">
+                <p style="font-size:1rem;font-weight:800;color:#0F0A1E;margin:0 0 0.25rem;text-align:center;">Pipeline complete 🎉</p>
+                <p style="font-size:0.82rem;color:#5C5470;margin:0 0 1.25rem;text-align:center;">Your ebook is ready in three formats.</p>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.6rem;margin-bottom:1.25rem;">
+                    <a href="{{ route('runs.export', [$run, 'premium']) }}" class="btn-primary" style="text-decoration:none;text-align:center;padding:0.7rem 0.85rem;font-size:0.8rem;">
+                        📄 Premium PDF
+                        <div style="font-size:0.65rem;font-weight:500;opacity:0.85;margin-top:2px;">Gumroad · Selar · Payhip</div>
+                    </a>
+                    <a href="{{ route('runs.export', [$run, 'kdp']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.7rem 0.85rem;font-size:0.8rem;">
+                        📦 KDP Word File
+                        <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">Amazon KDP upload</div>
+                    </a>
+                    <a href="{{ route('runs.export', [$run, 'master']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.7rem 0.85rem;font-size:0.8rem;">
+                        ✏️ Master DOCX
+                        <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">For your own edits</div>
+                    </a>
+                </div>
+
+                {{-- Pricing strip --}}
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.25rem;">
+                    <span style="background:#ECFDF5;color:#065F46;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Gumroad / Selar / Payhip: $7–$27</span>
+                    <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Amazon Kindle: $2.99–$9.99</span>
+                    <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Paperback: $9.99–$19.99</span>
+                </div>
+
+                {{-- Amazon KDP upload steps --}}
+                <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;">
+                    <p style="font-size:0.78rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to Amazon KDP</p>
+                    <ol style="margin:0;padding-left:1.2rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
+                        <li>Go to <strong>kdp.amazon.com</strong> and sign in</li>
+                        <li>Click <strong>Add new title → Kindle ebook</strong> or <strong>Paperback</strong></li>
+                        <li>Copy your title, subtitle, and description from the <strong>04-listings.txt</strong> file</li>
+                        <li>Upload <strong>ebook-kdp.docx</strong> as your manuscript</li>
+                        <li>Upload your cover image (make one in Canva or Midjourney)</li>
+                        <li>Set Kindle price <strong>$2.99–$9.99</strong> · Paperback <strong>$9.99–$19.99</strong></li>
+                        <li>Add the 7 backend keywords from your listing</li>
+                        <li>Select 2 categories from your listing</li>
+                        <li>Click <strong>Publish</strong> — live within 24–72 hours</li>
+                        <li>Receive royalties via <strong>Payoneer</strong> (payoneer.com)</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
