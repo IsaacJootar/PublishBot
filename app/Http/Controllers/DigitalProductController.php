@@ -209,7 +209,7 @@ class DigitalProductController extends Controller
         $relDir = "users/{$digitalProduct->user_id}/digital-products/{$digitalProduct->id}";
 
         $absolute = match ($format) {
-            'premium' => $export->exportPremiumPdf("{$relDir}/premium.pdf", $title, $author, $subtitle, $sections, '#6C3CE1', $productTypeLabel, $tagline),
+            'premium' => $export->exportDigitalProductPdf("{$relDir}/premium.pdf", $digitalProduct->product_type, $title, $author, $tagline, $sections, '#6C3CE1', $productTypeLabel),
             'kdp' => $export->exportKdpDocx("{$relDir}/kdp-version.docx", $title, $author, $subtitle, $sections),
             'master' => $export->exportMasterDocx("{$relDir}/master.docx", $title, $author, $subtitle, $sections),
         };
