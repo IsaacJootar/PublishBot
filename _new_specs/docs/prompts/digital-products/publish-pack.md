@@ -85,6 +85,18 @@ Generate the complete publish pack. Return as JSON:
     "Step 3",
     "Step 4",
     "Step 5"
+  ],
+  "etsy": [
+    "Go to etsy.com/sell and create a seller account",
+    "Click Add a listing → Digital download",
+    "Upload your premium.pdf file",
+    "Paste the title from your listing above",
+    "Copy the description from your sales page above",
+    "Add your 7 keywords as Etsy search tags",
+    "Set price at $17-$47",
+    "Note: Etsy charges $0.20 listing fee per product",
+    "Connect Payoneer at payoneer.com for payouts",
+    "Publish — live immediately"
   ]
 }
 

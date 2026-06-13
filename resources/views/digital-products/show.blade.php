@@ -295,7 +295,8 @@
 
         {{-- Pricing strip --}}
         <div style="display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:center;margin-top:1rem;">
-            <span style="background:#ECFDF5;color:#065F46;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Gumroad / Selar / Payhip: $37–$147</span>
+            <span style="background:#ECFDF5;color:#065F46;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Selar / Gumroad / Payhip: $27–$97</span>
+            <span style="background:#FEF3C7;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Etsy: $17–$47</span>
             <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Amazon Kindle: $9.99</span>
             <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Paperback: $19.99–$24.99</span>
         </div>
@@ -311,6 +312,23 @@
             </ol>
         </div>
         @endif
+
+        {{-- Etsy upload steps --}}
+        <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-top:0.75rem;">
+            <p style="font-size:0.8rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to Etsy</p>
+            <ol style="margin:0;padding-left:1.2rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
+                <li>Go to <strong>etsy.com/sell</strong> and create a free seller account</li>
+                <li>Click <strong>Add a listing → Digital download</strong></li>
+                <li>Upload your <strong>premium.pdf</strong> file (Etsy accepts up to 5 files, max 20MB each)</li>
+                <li>Add your product title from the listing above</li>
+                <li>Write your description — copy from the sales page above</li>
+                <li>Add tags — use the 7 keywords from your listing as Etsy search tags</li>
+                <li>Set your price between <strong>$17–$47</strong> (Etsy buyers expect slightly lower than Gumroad)</li>
+                <li>Etsy charges <strong>$0.20 listing fee</strong> per product</li>
+                <li>Set up <strong>Payoneer</strong> at payoneer.com to receive Etsy payouts</li>
+                <li>Click <strong>Publish</strong> — your product is live immediately</li>
+            </ol>
+        </div>
 
         {{-- Amazon KDP upload steps --}}
         <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-top:0.75rem;">
