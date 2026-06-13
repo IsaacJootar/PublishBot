@@ -27,14 +27,17 @@ class DashboardController extends Controller
 
         $recent = $user->runs()->orderByDesc('created_at')->limit(5)->get();
         $quickTopics = $settings->quick_topics ?? [];
+        $voices = $user->voiceProfiles()->orderByDesc('is_default')->orderBy('name')->get();
+        $defaultVoiceId = optional($voices->firstWhere('is_default', true))->id;
 
-        return view('dashboard', compact('stats', 'recent', 'quickTopics', 'settings'));
+        return view('dashboard', compact('stats', 'recent', 'quickTopics', 'settings', 'voices', 'defaultVoiceId'));
     }
 
     public function run(Request $request, PipelineService $pipeline): RedirectResponse
     {
         $request->validate([
             'topic' => ['required', 'string', 'max:200'],
+            'voice_profile_id' => ['nullable', 'integer', 'exists:voice_profiles,id'],
         ]);
 
         $user = auth()->user();
@@ -53,11 +56,24 @@ class DashboardController extends Controller
             $slug = $slug.'-'.($existing + 1);
         }
 
+        $voiceProfileId = $request->voice_profile_id;
+        if ($voiceProfileId) {
+            // Ensure it's the user's own
+            $owns = $user->voiceProfiles()->where('id', $voiceProfileId)->exists();
+            if (! $owns) {
+                $voiceProfileId = null;
+            }
+        }
+        if (! $voiceProfileId) {
+            $voiceProfileId = optional($user->defaultVoiceProfile())->id;
+        }
+
         $run = $user->runs()->create([
             'topic' => $topic,
             'slug' => $slug,
             'status' => 'pending',
             'output_path' => $slug,
+            'voice_profile_id' => $voiceProfileId,
         ]);
 
         $pipeline->start($run);

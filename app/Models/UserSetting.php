@@ -47,8 +47,8 @@ class UserSetting extends Model
             'model' => 'claude-sonnet-4-6',
             'web_search_tool_version' => 'web_search_20250305',
             'max_tokens' => 2000,
-            'chapter_count' => 8,
-            'words_per_chapter' => 500,
+            'chapter_count' => 10,
+            'words_per_chapter' => 700,
             'pin_count' => 15,
             'quick_topics' => ['Parenting', 'Finance', 'Fitness', 'Mindset', 'Productivity', 'Relationships', 'Cooking', 'Kids Education', 'Health', 'Business'],
         ];

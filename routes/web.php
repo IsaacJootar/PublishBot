@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RunController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\VoiceProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -29,6 +30,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
     Route::delete('/sales/{sale}', [SalesController::class, 'destroy'])->name('sales.destroy');
+
+    // My Voice
+    Route::get('/voice', [VoiceProfileController::class, 'index'])->name('voice.index');
+    Route::post('/voice', [VoiceProfileController::class, 'store'])->name('voice.store');
+    Route::get('/voice/{voiceProfile}', [VoiceProfileController::class, 'show'])->name('voice.show');
+    Route::patch('/voice/{voiceProfile}', [VoiceProfileController::class, 'update'])->name('voice.update');
+    Route::post('/voice/{voiceProfile}/train', [VoiceProfileController::class, 'train'])->name('voice.train');
+    Route::post('/voice/{voiceProfile}/extract', [VoiceProfileController::class, 'extract'])->name('voice.extract');
+    Route::get('/voice/{voiceProfile}/status', [VoiceProfileController::class, 'status'])->name('voice.status');
+    Route::post('/voice/{voiceProfile}/default', [VoiceProfileController::class, 'setDefault'])->name('voice.default');
+    Route::delete('/voice/{voiceProfile}', [VoiceProfileController::class, 'destroy'])->name('voice.destroy');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');

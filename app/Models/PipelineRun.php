@@ -13,6 +13,7 @@ class PipelineRun extends Model
 
     protected $fillable = [
         'user_id',
+        'voice_profile_id',
         'topic',
         'slug',
         'status',
@@ -38,6 +39,11 @@ class PipelineRun extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function voiceProfile(): BelongsTo
+    {
+        return $this->belongsTo(VoiceProfile::class);
     }
 
     public function stages(): HasMany

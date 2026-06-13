@@ -20,7 +20,8 @@ class Stage3aHandler extends BaseStageHandler
 
         $system = 'You are writing a chapter of a non-fiction ebook. '
             ."Match the tone to the topic. Be {$tone}. "
-            .'Write in short paragraphs. Use subheadings. End with one actionable tip.';
+            .'Write in short paragraphs. Use subheadings. End with one actionable tip.'
+            .$this->voiceSuffix($run);
 
         $fullDraft = "TOPIC: {$run->topic}\n";
         $fullDraft .= 'GENERATED: '.now()->toDateTimeString()."\n";

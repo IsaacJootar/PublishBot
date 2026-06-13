@@ -65,16 +65,16 @@
                     <p style="font-size:0.8rem;color:#9B93B0;margin:0;">These apply to every new pipeline run.</p>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:0.5rem;">
                     <div>
                         <label style="display:block;font-size:0.8rem;font-weight:600;color:#0F0A1E;margin-bottom:0.4rem;">Chapters <span style="color:#9B93B0;font-weight:400;">(6–12)</span></label>
-                        <input type="number" name="chapter_count" value="{{ old('chapter_count', $settings->chapter_count) }}"
-                            min="6" max="12" class="pai-input" />
+                        <input type="number" name="chapter_count" id="chapter_count" value="{{ old('chapter_count', $settings->chapter_count) }}"
+                            min="6" max="12" class="pai-input" oninput="updatePageEstimate()" />
                     </div>
                     <div>
                         <label style="display:block;font-size:0.8rem;font-weight:600;color:#0F0A1E;margin-bottom:0.4rem;">Words/chapter <span style="color:#9B93B0;font-weight:400;">(300–800)</span></label>
-                        <input type="number" name="words_per_chapter" value="{{ old('words_per_chapter', $settings->words_per_chapter) }}"
-                            min="300" max="800" class="pai-input" />
+                        <input type="number" name="words_per_chapter" id="words_per_chapter" value="{{ old('words_per_chapter', $settings->words_per_chapter) }}"
+                            min="300" max="800" class="pai-input" oninput="updatePageEstimate()" />
                     </div>
                     <div>
                         <label style="display:block;font-size:0.8rem;font-weight:600;color:#0F0A1E;margin-bottom:0.4rem;">Pinterest pins <span style="color:#9B93B0;font-weight:400;">(10–25)</span></label>
@@ -82,6 +82,26 @@
                             min="10" max="25" class="pai-input" />
                     </div>
                 </div>
+
+                <div style="background:#F5F4FF;border-radius:10px;padding:0.7rem 0.9rem;border-left:3px solid #6C3CE1;margin-bottom:1rem;">
+                    <p style="font-size:0.78rem;color:#5C5470;margin:0;">
+                        Estimated ebook length:
+                        <span id="page-estimate" style="font-weight:700;color:#5A2EC9;">— pages</span>
+                        <span id="word-estimate" style="color:#9B93B0;"></span>
+                    </p>
+                    <p style="font-size:0.7rem;color:#9B93B0;margin:0.25rem 0 0;">Based on ~250 words/page.</p>
+                </div>
+                <script>
+                function updatePageEstimate() {
+                    const c = parseInt(document.getElementById('chapter_count').value) || 0;
+                    const w = parseInt(document.getElementById('words_per_chapter').value) || 0;
+                    const words = c * w;
+                    const pages = Math.round(words / 250);
+                    document.getElementById('page-estimate').textContent = pages + ' pages';
+                    document.getElementById('word-estimate').textContent = ' (~' + words.toLocaleString() + ' words)';
+                }
+                updatePageEstimate();
+                </script>
 
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.8rem;font-weight:600;color:#0F0A1E;margin-bottom:0.4rem;">Default writing tone</label>

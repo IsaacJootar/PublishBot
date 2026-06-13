@@ -58,6 +58,26 @@
                     Run pipeline →
                 </button>
             </div>
+
+            {{-- Voice picker --}}
+            @if($voices->isNotEmpty())
+            <div style="margin-top:0.85rem;display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+                <label for="voice-select" style="font-size:0.75rem;font-weight:600;color:#5C5470;">Write in voice:</label>
+                <select name="voice_profile_id" id="voice-select" class="pai-input" style="max-width:280px;font-size:0.8rem;padding:0.4rem 0.6rem;cursor:pointer;">
+                    <option value="">— No voice profile —</option>
+                    @foreach($voices as $v)
+                    <option value="{{ $v->id }}" {{ $defaultVoiceId === $v->id ? 'selected' : '' }}>
+                        {{ $v->emoji }} {{ $v->name }} {{ $v->is_default ? '(default)' : '' }} {{ $v->extracted_style ? '' : '— untrained' }}
+                    </option>
+                    @endforeach
+                </select>
+                <a href="{{ route('voice.index') }}" style="font-size:0.72rem;color:#6C3CE1;text-decoration:none;font-weight:600;">Manage voices →</a>
+            </div>
+            @else
+            <div style="margin-top:0.85rem;background:#FFFBEB;color:#92400E;border-left:3px solid #F59E0B;border-radius:8px;padding:0.55rem 0.8rem;font-size:0.75rem;">
+                💡 Train a voice profile to make every ebook sound like you. <a href="{{ route('voice.index') }}" style="color:#92400E;font-weight:700;text-decoration:underline;">Set up My Voice →</a>
+            </div>
+            @endif
             @error('topic')
             <p style="color:#EF4444;font-size:0.78rem;margin:0.5rem 0 0;">{{ $message }}</p>
             @enderror
