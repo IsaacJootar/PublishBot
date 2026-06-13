@@ -195,13 +195,21 @@ class DigitalProductController extends Controller
 
         $title = $digitalProduct->product_title ?: Str::title($digitalProduct->niche);
         $author = $digitalProduct->user->getSettings()->author_name ?: $digitalProduct->user->name;
-        $subtitle = $digitalProduct->structure_output['tagline'] ?? null;
+        $subtitle = null;
+        $tagline = $digitalProduct->structure_output['tagline'] ?? null;
         $sections = $this->parseSections($digitalProduct);
+
+        $productTypeLabel = match ($digitalProduct->product_type) {
+            'prompt_library' => 'Prompt Library',
+            'sop_pack' => 'SOP Pack',
+            'email_sequence_vault' => 'Email Sequence Vault',
+            default => null,
+        };
 
         $relDir = "users/{$digitalProduct->user_id}/digital-products/{$digitalProduct->id}";
 
         $absolute = match ($format) {
-            'premium' => $export->exportPremiumPdf("{$relDir}/premium.pdf", $title, $author, $subtitle, $sections),
+            'premium' => $export->exportPremiumPdf("{$relDir}/premium.pdf", $title, $author, $subtitle, $sections, '#6C3CE1', $productTypeLabel, $tagline),
             'kdp' => $export->exportKdpDocx("{$relDir}/kdp-version.docx", $title, $author, $subtitle, $sections),
             'master' => $export->exportMasterDocx("{$relDir}/master.docx", $title, $author, $subtitle, $sections),
         };

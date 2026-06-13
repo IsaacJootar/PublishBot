@@ -135,7 +135,7 @@ class RunController extends Controller
         $relDir = "users/{$pipelineRun->user_id}/manuscripts/{$pipelineRun->id}";
 
         $absolute = match ($format) {
-            'premium' => $export->exportPremiumPdf("{$relDir}/ebook-premium.pdf", $title, $author, $subtitle, $chapters),
+            'premium' => $export->exportPremiumPdf("{$relDir}/ebook-premium.pdf", $title, $author, $subtitle, $chapters, '#6C3CE1', 'Kindle Ebook'),
             'kdp' => $export->exportKdpDocx("{$relDir}/ebook-kdp.docx", $title, $author, $subtitle, $chapters),
             'master' => $export->exportMasterDocx("{$relDir}/ebook-master.docx", $title, $author, $subtitle, $chapters),
         };

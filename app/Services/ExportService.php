@@ -13,7 +13,7 @@ class ExportService
     /**
      * @param  array<int, array{title:string, body:string}>  $chapters
      */
-    public function exportPremiumPdf(string $relPath, string $title, string $author, ?string $subtitle, array $chapters, string $brandColor = '#6C3CE1'): string
+    public function exportPremiumPdf(string $relPath, string $title, string $author, ?string $subtitle, array $chapters, string $brandColor = '#6C3CE1', ?string $productType = null, ?string $tagline = null): string
     {
         $pdf = Pdf::loadView('exports.premium-pdf', [
             'title' => $title,
@@ -21,6 +21,8 @@ class ExportService
             'subtitle' => $subtitle,
             'chapters' => $chapters,
             'brandColor' => $brandColor,
+            'productType' => $productType,
+            'tagline' => $tagline,
         ])->setPaper('a4');
 
         $absolute = $this->ensurePath($relPath);
