@@ -39,9 +39,20 @@ class ExportService
     public function exportDigitalProductPdf(string $relPath, string $productType, string $title, string $author, ?string $tagline, array $sections, string $brandColor = '#6C3CE1', ?string $productTypeLabel = null): string
     {
         [$view, $data] = match ($productType) {
+            // Original 3 types — specialised parsers
             'prompt_library' => ['exports.prompt-library-pdf', ['categories' => $this->parsePromptCategories($sections)]],
             'sop_pack' => ['exports.sop-pack-pdf', ['sops' => $this->parseSops($sections)]],
             'email_sequence_vault' => ['exports.email-vault-pdf', ['sequences' => $this->parseSequences($sections)]],
+            // New 8 types — sections passed directly (JSON already decoded by parseSections)
+            'content_calendar_system' => ['exports.content-calendar-pdf', ['sections' => $sections]],
+            'excel_tracker' => ['exports.excel-tracker-guide-pdf', ['sections' => $sections]],
+            'notion_business_os' => ['exports.notion-os-pdf', ['sections' => $sections]],
+            'website_copy_pack' => ['exports.website-copy-pdf', ['sections' => $sections]],
+            'brand_messaging_system' => ['exports.brand-messaging-pdf', ['sections' => $sections]],
+            'sales_funnel_copy' => ['exports.sales-funnel-pdf', ['sections' => $sections]],
+            'niche_research_report' => ['exports.niche-research-pdf', ['sections' => $sections]],
+            'buyer_persona_pack' => ['exports.buyer-persona-pdf', ['sections' => $sections]],
+            // Fallback
             default => ['exports.premium-pdf', ['chapters' => $sections]],
         };
 
