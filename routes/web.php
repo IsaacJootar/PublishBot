@@ -52,6 +52,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('convert')->name('convert.')->group(function () {
         Route::get('/', [ConvertDraftController::class, 'index'])->name('index');
         Route::post('/upload', [ConvertDraftController::class, 'upload'])->name('upload');
+        Route::get('/{pipelineRun}/order', [ConvertDraftController::class, 'orderPage'])->name('order');
+        Route::post('/{pipelineRun}/order', [ConvertDraftController::class, 'confirmOrder'])->name('order.confirm');
         Route::get('/{pipelineRun}/review', [ConvertDraftController::class, 'review'])->name('review');
         Route::get('/{pipelineRun}/status', [ConvertDraftController::class, 'status'])->name('status');
         Route::post('/{pipelineRun}/approve', [ConvertDraftController::class, 'approve'])->name('approve');

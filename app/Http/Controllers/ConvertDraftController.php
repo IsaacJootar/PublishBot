@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\CleanDraftSectionJob;
+use App\Jobs\InferChapterOrderJob;
 use App\Models\PipelineRun;
 use App\Services\ClaudeService;
 use App\Services\ExportService;
@@ -30,7 +31,8 @@ class ConvertDraftController extends Controller
     {
         $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'file' => ['required', 'file', 'max:51200', 'mimes:txt,md,docx'], // 50 MB
+            'files' => ['required', 'array', 'min:1', 'max:20'],
+            'files.*' => ['file', 'max:51200', 'mimes:txt,md,docx'],
         ]);
 
         $user = auth()->user();
@@ -41,17 +43,30 @@ class ConvertDraftController extends Controller
                 ->with('toast', ['message' => 'Add your Claude API key in Settings first.', 'type' => 'warning']);
         }
 
-        $file = $request->file('file');
-        $originalName = $file->getClientOriginalName();
-        $ext = strtolower($file->getClientOriginalExtension());
+        $uploadedFiles = [];
+        $allFilenames = [];
 
-        $rawContent = match ($ext) {
-            'docx' => $this->extractDocx($file->getRealPath()),
-            default => file_get_contents($file->getRealPath()),
-        };
+        foreach ($request->file('files') as $file) {
+            $name = $file->getClientOriginalName();
+            $ext = strtolower($file->getClientOriginalExtension());
+            $content = $ext === 'docx'
+                ? $this->extractDocx($file->getRealPath())
+                : (string) file_get_contents($file->getRealPath());
 
-        if (! trim((string) $rawContent)) {
-            return back()->with('toast', ['message' => 'The uploaded file appears empty.', 'type' => 'warning']);
+            if (! trim($content)) {
+                continue;
+            }
+
+            $uploadedFiles[] = [
+                'filename' => $name,
+                'content' => $content,
+                'word_count' => str_word_count(strip_tags($content)),
+            ];
+            $allFilenames[] = $name;
+        }
+
+        if (empty($uploadedFiles)) {
+            return back()->with('toast', ['message' => 'All uploaded files appear empty.', 'type' => 'warning']);
         }
 
         $topic = trim($request->title);
@@ -61,27 +76,86 @@ class ConvertDraftController extends Controller
             $slug = $slug.'-'.($existing + 1);
         }
 
+        // For single file: keep legacy raw_uploaded_content flow but also populate uploaded_files
+        $isSingle = count($uploadedFiles) === 1;
+
         $run = $user->runs()->create([
             'topic' => $topic,
             'slug' => $slug,
             'status' => 'running',
             'output_path' => $slug,
             'creation_mode' => 'converted',
-            'original_filename' => $originalName,
-            'raw_uploaded_content' => $rawContent,
+            'original_filename' => implode(', ', $allFilenames),
+            'raw_uploaded_content' => $isSingle ? $uploadedFiles[0]['content'] : null,
+            'uploaded_files' => $uploadedFiles,
         ]);
 
-        // Dispatch cleaning jobs
-        $sections = $this->splitIntoSections($rawContent);
-        $total = count($sections);
+        if ($isSingle) {
+            // Single file: go straight to cleaning (existing behaviour)
+            $sections = $this->splitIntoSections($uploadedFiles[0]['content']);
+            $total = count($sections);
+            foreach ($sections as $i => $section) {
+                CleanDraftSectionJob::dispatch($run->id, $i, $total, $section)
+                    ->delay(now()->addSeconds($i * 2));
+            }
 
+            return redirect()->route('convert.review', $run)
+                ->with('toast', ['message' => "Uploaded. Cleaning {$total} sections now.", 'type' => 'success']);
+        }
+
+        // Multiple files: infer order first, then show order-confirm page
+        InferChapterOrderJob::dispatch($run->id);
+
+        return redirect()->route('convert.order', $run)
+            ->with('toast', ['message' => count($uploadedFiles).' files uploaded. Claude is inferring the chapter order...', 'type' => 'success']);
+    }
+
+    public function orderPage(PipelineRun $pipelineRun): View
+    {
+        $this->authorise($pipelineRun);
+
+        return view('convert.order', ['run' => $pipelineRun]);
+    }
+
+    public function confirmOrder(Request $request, PipelineRun $pipelineRun): RedirectResponse
+    {
+        $this->authorise($pipelineRun);
+
+        $request->validate([
+            'order' => ['required', 'array', 'min:1'],
+            'order.*' => ['string'],
+        ]);
+
+        $confirmedFilenames = $request->order; // ordered list of filenames
+        $files = collect($pipelineRun->uploaded_files ?? []);
+
+        // Build merged raw content in confirmed order
+        $merged = collect($confirmedFilenames)->map(function ($fname) use ($files) {
+            $file = $files->firstWhere('filename', $fname);
+            if (! $file) {
+                return null;
+            }
+
+            return "# {$fname}\n\n".$file['content'];
+        })->filter()->implode("\n\n---\n\n");
+
+        $pipelineRun->update([
+            'confirmed_order' => $confirmedFilenames,
+            'raw_uploaded_content' => $merged,
+            'status' => 'running',
+            'progress_note' => 'Starting cleaning...',
+        ]);
+
+        // Dispatch cleaning jobs on merged content
+        $sections = $this->splitIntoSections($merged);
+        $total = count($sections);
         foreach ($sections as $i => $section) {
-            CleanDraftSectionJob::dispatch($run->id, $i, $total, $section)
+            CleanDraftSectionJob::dispatch($pipelineRun->id, $i, $total, $section)
                 ->delay(now()->addSeconds($i * 2));
         }
 
-        return redirect()->route('convert.review', $run)
-            ->with('toast', ['message' => "Uploaded. Cleaning {$total} sections now.", 'type' => 'success']);
+        return redirect()->route('convert.review', $pipelineRun)
+            ->with('toast', ['message' => "Order confirmed. Cleaning {$total} sections now.", 'type' => 'success']);
     }
 
     public function review(PipelineRun $pipelineRun): View
