@@ -28,8 +28,25 @@
         </div>
     </div>
 
+    {{-- New project — two options --}}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:1rem;">
+        <div class="pai-card" style="border-top:3px solid #6C3CE1;padding:1rem 1.125rem;">
+            <div style="font-size:1.25rem;margin-bottom:0.35rem;">✍️</div>
+            <p style="font-size:0.85rem;font-weight:700;color:#0F0A1E;margin:0 0 0.2rem;">Start from scratch</p>
+            <p style="font-size:0.75rem;color:#9B93B0;margin:0 0 0.75rem;line-height:1.4;">Claude researches, outlines, and writes everything for you.</p>
+            <a href="#generate-form" onclick="document.getElementById('generate-form').scrollIntoView({behavior:'smooth'})" class="btn-primary" style="text-decoration:none;font-size:0.78rem;padding:0.45rem 0.8rem;">Start generating →</a>
+        </div>
+        <a href="{{ route('convert.index') }}" class="pai-card" style="text-decoration:none;color:inherit;border-top:3px solid #F59E0B;padding:1rem 1.125rem;transition:transform 0.15s;"
+           onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            <div style="font-size:1.25rem;margin-bottom:0.35rem;">📄</div>
+            <p style="font-size:0.85rem;font-weight:700;color:#0F0A1E;margin:0 0 0.2rem;">I already have a draft</p>
+            <p style="font-size:0.75rem;color:#9B93B0;margin:0 0 0.75rem;line-height:1.4;">Upload your document. PublishBot formats and packages it for publishing.</p>
+            <span class="btn-outline" style="font-size:0.78rem;padding:0.45rem 0.8rem;">Convert my draft →</span>
+        </a>
+    </div>
+
     {{-- Topic input --}}
-    <div class="pai-card" style="margin-bottom:1.5rem;">
+    <div class="pai-card" id="generate-form" style="margin-bottom:1.5rem;">
         <p style="font-size:0.9rem;font-weight:700;color:#0F0A1E;margin:0 0 0.25rem;">Run a new pipeline</p>
         <p style="font-size:0.8rem;color:#9B93B0;margin:0 0 1rem;">Type any topic. One click produces your ebook, workbook, listings, and pins.</p>
 
@@ -113,6 +130,8 @@
         </div>
         @endif
     </div>
+
+    <style>@media(max-width:640px){[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}}</style>
 
     {{-- Recent runs --}}
     @if($recent->isNotEmpty())

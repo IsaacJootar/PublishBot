@@ -15,6 +15,13 @@ class PipelineRun extends Model
         'user_id',
         'voice_profile_id',
         'series_id',
+        'creation_mode',
+        'original_filename',
+        'raw_uploaded_content',
+        'cleaned_content',
+        'cleaning_approved',
+        'convert_listing',
+        'convert_launch',
         'topic',
         'slug',
         'status',
@@ -32,6 +39,9 @@ class PipelineRun extends Model
         return [
             'current_stage' => 'integer',
             'user_confirmed_continue' => 'boolean',
+            'cleaning_approved' => 'boolean',
+            'convert_listing' => 'array',
+            'convert_launch' => 'array',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

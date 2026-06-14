@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ConvertDraftController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DigitalProductController;
 use App\Http\Controllers\ProfileController;
@@ -45,6 +46,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/{digitalProduct}/edit-field', [DigitalProductController::class, 'editField'])->name('edit-field');
         Route::get('/{digitalProduct}/export/{format}', [DigitalProductController::class, 'export'])->name('export');
         Route::delete('/{digitalProduct}', [DigitalProductController::class, 'destroy'])->name('destroy');
+    });
+
+    // Convert Draft
+    Route::prefix('convert')->name('convert.')->group(function () {
+        Route::get('/', [ConvertDraftController::class, 'index'])->name('index');
+        Route::post('/upload', [ConvertDraftController::class, 'upload'])->name('upload');
+        Route::get('/{pipelineRun}/review', [ConvertDraftController::class, 'review'])->name('review');
+        Route::get('/{pipelineRun}/status', [ConvertDraftController::class, 'status'])->name('status');
+        Route::post('/{pipelineRun}/approve', [ConvertDraftController::class, 'approve'])->name('approve');
+        Route::get('/{pipelineRun}/listing', [ConvertDraftController::class, 'listing'])->name('listing');
+        Route::get('/{pipelineRun}/launch', [ConvertDraftController::class, 'launch'])->name('launch');
+        Route::get('/{pipelineRun}/export/{format}', [ConvertDraftController::class, 'export'])->name('export');
     });
 
     // My Series
