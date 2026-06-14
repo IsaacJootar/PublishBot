@@ -156,6 +156,8 @@
         </div>
 
         @php $s = $product->structure_output; @endphp
+
+        {{-- Original 3 types --}}
         @if(isset($s['categories']))
             @foreach($s['categories'] as $c)
             <div style="background:#F5F4FF;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.5rem;">
@@ -175,6 +177,95 @@
             <div style="background:#F5F4FF;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.5rem;">
                 <p style="margin:0;font-size:0.85rem;font-weight:700;color:#0F0A1E;">{{ $seq['name'] ?? '' }} <span style="font-size:0.7rem;font-weight:600;color:#5A2EC9;">({{ $seq['email_count'] ?? 0 }} emails)</span></p>
                 <p style="margin:0.2rem 0 0;font-size:0.75rem;color:#5C5470;"><strong>Trigger:</strong> {{ $seq['trigger'] ?? '' }} · <strong>Goal:</strong> {{ $seq['goal'] ?? '' }}</p>
+            </div>
+            @endforeach
+
+        {{-- Content Calendar System --}}
+        @elseif(isset($s['monthly_themes']))
+            @foreach(($s['monthly_themes'] ?? []) as $month)
+            <div style="background:#F5F4FF;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.5rem;">
+                <p style="margin:0;font-size:0.85rem;font-weight:700;color:#0F0A1E;">Month {{ $month['month'] ?? '' }}: {{ $month['theme'] ?? '' }}</p>
+                <p style="margin:0.2rem 0 0;font-size:0.75rem;color:#5C5470;">{{ $month['focus'] ?? '' }}</p>
+            </div>
+            @endforeach
+            @if(!empty($s['content_pillars']))
+            <p style="font-size:0.8rem;font-weight:700;color:#0F0A1E;margin:0.75rem 0 0.35rem;">Content Pillars</p>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                @foreach($s['content_pillars'] as $pillar)
+                <span style="background:#EDE9FF;color:#5A2EC9;border-radius:8px;padding:3px 10px;font-size:0.75rem;font-weight:600;">{{ $pillar['pillar'] ?? '' }} ({{ $pillar['percentage'] ?? 0 }}%)</span>
+                @endforeach
+            </div>
+            @endif
+
+        {{-- Excel Tracker --}}
+        @elseif(isset($s['sheets']))
+            @foreach($s['sheets'] as $sheet)
+            <div style="background:#F0FDF4;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.5rem;border-left:3px solid #059669;">
+                <p style="margin:0;font-size:0.85rem;font-weight:700;color:#064E3B;">{{ $sheet['sheet_name'] ?? '' }}</p>
+                <p style="margin:0.2rem 0 0;font-size:0.75rem;color:#5C5470;">{{ $sheet['purpose'] ?? '' }} · {{ count($sheet['columns'] ?? []) }} columns</p>
+            </div>
+            @endforeach
+
+        {{-- Notion Business OS --}}
+        @elseif(isset($s['workspace_sections']))
+            <div style="background:#FEF3C7;border-left:3px solid #F59E0B;border-radius:8px;padding:0.7rem 0.9rem;margin-bottom:0.85rem;">
+                <p style="margin:0;font-size:0.78rem;font-weight:700;color:#92400E;">🗂️ Notion Business OS — {{ count($s['workspace_sections']) }} workspace sections designed</p>
+            </div>
+            @foreach($s['workspace_sections'] as $ws)
+            <div style="background:#FFFBEB;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.5rem;border-left:3px solid #F59E0B;">
+                <p style="margin:0;font-size:0.85rem;font-weight:700;color:#78350F;">{{ $ws['section_name'] ?? '' }}</p>
+                <p style="margin:0.2rem 0 0;font-size:0.75rem;color:#5C5470;">{{ $ws['purpose'] ?? '' }}
+                    @if(!empty($ws['databases'])) · {{ count($ws['databases']) }} database(s)@endif
+                </p>
+            </div>
+            @endforeach
+
+        {{-- Website Copy Pack --}}
+        @elseif(isset($s['pages']) && is_array($s['pages']))
+            <p style="font-size:0.8rem;color:#5C5470;margin:0 0 0.6rem;">Pages to write:</p>
+            @foreach($s['pages'] as $page)
+            <div style="background:#EFF6FF;border-radius:8px;padding:0.55rem 0.85rem;margin-bottom:0.4rem;border-left:3px solid #2563EB;">
+                <p style="margin:0;font-size:0.85rem;font-weight:700;color:#1E3A8A;">{{ $page }}</p>
+            </div>
+            @endforeach
+            @if(!empty($s['tone_direction']))
+            <p style="font-size:0.75rem;color:#5C5470;margin:0.6rem 0 0;"><strong>Tone:</strong> {{ $s['tone_direction'] }}</p>
+            @endif
+
+        {{-- Brand Messaging System --}}
+        @elseif(isset($s['deliverables']))
+            @foreach($s['deliverables'] as $i => $d)
+            <div style="background:#FFFBEB;border-radius:8px;padding:0.55rem 0.85rem;margin-bottom:0.4rem;border-left:3px solid #D97706;">
+                <p style="margin:0;font-size:0.82rem;font-weight:700;color:#78350F;">{{ $i + 1 }}. {{ $d }}</p>
+            </div>
+            @endforeach
+
+        {{-- Sales Funnel Copy --}}
+        @elseif(isset($s['funnel_components']))
+            @foreach($s['funnel_components'] as $i => $comp)
+            <div style="background:#FFF5F5;border-radius:8px;padding:0.55rem 0.85rem;margin-bottom:0.4rem;border-left:3px solid #DC2626;">
+                <p style="margin:0;font-size:0.82rem;font-weight:700;color:#7F1D1D;">{{ $i + 1 }}. {{ $comp }}</p>
+            </div>
+            @endforeach
+            @if(!empty($s['email_count']))
+            <p style="font-size:0.75rem;color:#5C5470;margin:0.5rem 0 0;"><strong>Email sequence:</strong> {{ $s['email_count'] }} emails · <strong>Lead magnet:</strong> {{ $s['lead_magnet_type'] ?? 'TBD' }}</p>
+            @endif
+
+        {{-- Niche Research Report --}}
+        @elseif(isset($s['sections']) && is_array($s['sections']))
+            @if(!empty($s['page_count']))<p style="font-size:0.78rem;font-weight:600;color:#6C3CE1;margin:0 0 0.5rem;">{{ $s['page_count'] }} pages · {{ $s['geography'] ?? '' }}</p>@endif
+            @foreach($s['sections'] as $i => $sec)
+            <div style="background:#F5F4FF;border-radius:8px;padding:0.55rem 0.85rem;margin-bottom:0.4rem;border-left:3px solid #6C3CE1;">
+                <p style="margin:0;font-size:0.82rem;font-weight:700;color:#1A0D33;">{{ $i + 1 }}. {{ $sec }}</p>
+            </div>
+            @endforeach
+
+        {{-- Buyer Persona Pack --}}
+        @elseif(isset($s['personas']) && is_array($s['personas']))
+            @foreach($s['personas'] as $persona)
+            <div style="background:#E0F7FA;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.5rem;border-left:3px solid #0891B2;">
+                <p style="margin:0;font-size:0.85rem;font-weight:700;color:#0C4A6E;">Persona {{ $persona['number'] ?? '' }}: {{ $persona['title'] ?? $persona['archetype'] ?? 'Persona' }}</p>
+                @if(!empty($persona['focus']))<p style="margin:0.2rem 0 0;font-size:0.75rem;color:#5C5470;">{{ $persona['focus'] }}</p>@endif
             </div>
             @endforeach
         @endif
@@ -203,7 +294,32 @@
             </div>
         </div>
 
-        <pre style="font-family:inherit;white-space:pre-wrap;font-size:0.78rem;color:#0F0A1E;line-height:1.6;background:#FAF9FF;padding:1rem;border-radius:10px;margin:0;max-height:480px;overflow-y:auto;border:1px solid #E4E0F0;">{{ $product->content_output }}</pre>
+        @php
+            $isExtended = in_array($product->product_type, \App\Models\DigitalProduct::extendedTypes());
+            $contentSections = null;
+            if ($isExtended) {
+                $decoded = json_decode($product->content_output, true);
+                $contentSections = is_array($decoded) && isset($decoded['sections']) ? $decoded['sections'] : null;
+            }
+        @endphp
+
+        @if($contentSections)
+            {{-- Extended types: show section list with preview --}}
+            <div style="background:#ECFDF5;border-left:3px solid #10B981;border-radius:8px;padding:0.65rem 0.9rem;margin-bottom:0.85rem;">
+                <p style="margin:0;font-size:0.78rem;font-weight:700;color:#065F46;">✓ {{ count($contentSections) }} sections generated — usage guide is first (included in PDF & DOCX)</p>
+            </div>
+            @foreach($contentSections as $i => $sec)
+            <details style="margin-bottom:0.4rem;" {{ $i === 0 ? 'open' : '' }}>
+                <summary style="cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.55rem 0.85rem;font-size:0.82rem;font-weight:700;color:#0F0A1E;list-style:none;display:flex;align-items:center;gap:0.5rem;">
+                    <span style="color:#6C3CE1;font-size:0.7rem;">{{ $i + 1 }}</span> {{ $sec['title'] ?? 'Section '.($i+1) }}
+                </summary>
+                <div style="padding:0.6rem 0.85rem;font-size:0.76rem;color:#5C5470;line-height:1.6;max-height:200px;overflow-y:auto;border:1px solid #E4E0F0;border-top:none;border-radius:0 0 8px 8px;white-space:pre-wrap;">{{ mb_substr($sec['body'] ?? '', 0, 600) }}{{ strlen($sec['body'] ?? '') > 600 ? '…' : '' }}</div>
+            </details>
+            @endforeach
+        @else
+            {{-- Original types: plain text --}}
+            <pre style="font-family:inherit;white-space:pre-wrap;font-size:0.78rem;color:#0F0A1E;line-height:1.6;background:#FAF9FF;padding:1rem;border-radius:10px;margin:0;max-height:480px;overflow-y:auto;border:1px solid #E4E0F0;">{{ $product->content_output }}</pre>
+        @endif
     </div>
     @endif
 
@@ -320,13 +436,49 @@
             </div>
         </div>
 
-        {{-- Pricing strip --}}
+        {{-- Notion OS orange badge — shown for notion_business_os only --}}
+        @if($product->product_type === 'notion_business_os')
+        <div style="background:#FEF3C7;border:2px solid #F59E0B;border-radius:10px;padding:1rem 1.1rem;margin-top:1rem;">
+            <p style="font-size:0.88rem;font-weight:800;color:#92400E;margin:0 0 0.6rem;">🟧 Your action needed — Build and sell your Notion OS</p>
+            <p style="font-size:0.78rem;color:#78350F;margin:0 0 0.85rem;line-height:1.6;">Download your PDF spec above. Then follow these 4 steps to start selling unlimited copies.</p>
+
+            <div style="display:flex;flex-direction:column;gap:0.6rem;">
+                <div style="background:#FFFBEB;border-radius:8px;padding:0.65rem 0.85rem;">
+                    <p style="margin:0 0 0.25rem;font-size:0.8rem;font-weight:700;color:#78350F;">Step 1 — Build the workspace in Notion <span style="font-weight:400;color:#92400E;">(3–5 hours)</span></p>
+                    <p style="margin:0;font-size:0.75rem;color:#5C5470;line-height:1.6;">Open your PDF specification. Follow Section 1 (Getting Started) to create each database and page in your own Notion account using the spec as your guide. <strong>Alternative:</strong> Hire a Notion builder on Fiverr ($50–$150) to build it from your spec.</p>
+                </div>
+                <div style="background:#FFFBEB;border-radius:8px;padding:0.65rem 0.85rem;">
+                    <p style="margin:0 0 0.25rem;font-size:0.8rem;font-weight:700;color:#78350F;">Step 2 — Get your duplicate link</p>
+                    <p style="margin:0;font-size:0.75rem;color:#5C5470;line-height:1.6;">In Notion, click <strong>Share</strong> on the workspace root page → <strong>Publish to web</strong> → enable <strong>Allow duplicate as template</strong> → copy the link.</p>
+                </div>
+                <div style="background:#FFFBEB;border-radius:8px;padding:0.65rem 0.85rem;">
+                    <p style="margin:0 0 0.25rem;font-size:0.8rem;font-weight:700;color:#78350F;">Step 3 — Sell the link</p>
+                    <p style="margin:0;font-size:0.75rem;color:#5C5470;line-height:1.6;">List on <strong>Gumroad</strong>, <strong>Etsy</strong>, or <strong>Selar</strong>. When a buyer purchases, they receive your duplicate link. They click it → click Duplicate → done. You never send anything manually — the platform delivers the link automatically.</p>
+                </div>
+                <div style="background:#FFFBEB;border-radius:8px;padding:0.65rem 0.85rem;">
+                    <p style="margin:0 0 0.25rem;font-size:0.8rem;font-weight:700;color:#78350F;">Step 4 — Sell forever</p>
+                    <p style="margin:0;font-size:0.75rem;color:#5C5470;line-height:1.6;">One build. Unlimited sales. Update the workspace any time — the duplicate link always shares the latest version.</p>
+                </div>
+            </div>
+
+            <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #FDE68A;">
+                <p style="font-size:0.75rem;font-weight:700;color:#92400E;margin:0 0 0.25rem;">💰 Recommended pricing</p>
+                <p style="font-size:0.75rem;color:#78350F;margin:0;">Gumroad / Selar: <strong>$97–$297</strong> · Etsy: <strong>$47–$97</strong></p>
+            </div>
+        </div>
+        @endif
+
+        {{-- Pricing strip (not for Notion OS) --}}
+        @if($product->product_type !== 'notion_business_os')
         <div style="display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:center;margin-top:1rem;">
             <span style="background:#ECFDF5;color:#065F46;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Selar / Gumroad / Payhip: $27–$97</span>
             <span style="background:#FEF3C7;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Etsy: $17–$47</span>
+            @if($isKdpType)
             <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Amazon Kindle: $9.99</span>
             <span style="background:#FFFBEB;color:#92400E;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:600;">Paperback: $19.99–$24.99</span>
+            @endif
         </div>
+        @endif
 
         {{-- Native platform upload steps --}}
         @if(isset($pk['platform_upload_steps']))
@@ -341,6 +493,7 @@
         @endif
 
         {{-- Etsy upload steps --}}
+        @if($product->product_type !== 'notion_business_os')
         <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-top:0.75rem;">
             <p style="font-size:0.8rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to Etsy</p>
             <ol style="margin:0;padding-left:1.2rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
@@ -356,8 +509,10 @@
                 <li>Click <strong>Publish</strong> — your product is live immediately</li>
             </ol>
         </div>
+        @endif
 
-        {{-- Amazon KDP upload steps --}}
+        {{-- Amazon KDP upload steps (only for KDP-eligible types) --}}
+        @if($isKdpType)
         <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:8px;padding:0.85rem 1rem;margin-top:0.75rem;">
             <p style="font-size:0.8rem;font-weight:700;color:#92400E;margin:0 0 0.4rem;">🟧 Your action needed — Upload to Amazon KDP</p>
             <ol style="margin:0;padding-left:1.2rem;font-size:0.75rem;color:#5C5470;line-height:1.7;">
@@ -371,6 +526,7 @@
                 <li>Set up <strong>Payoneer</strong> at payoneer.com to receive royalties</li>
             </ol>
         </div>
+        @endif
     </div>
     @endif
 
