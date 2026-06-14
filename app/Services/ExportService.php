@@ -325,6 +325,315 @@ class ExportService
         return $absolute;
     }
 
+    // ── XLSX exports ──────────────────────────────────────────────────────────
+
+    /**
+     * Content Calendar XLSX — 5 sheets.
+     *
+     * @param  list<array{title:string,body:string}>  $sections
+     */
+    public function exportContentCalendarXlsx(string $relPath, string $title, array $sections): string
+    {
+        $w = new XlsxWriter;
+
+        // Index sections by title
+        $byTitle = [];
+        foreach ($sections as $s) {
+            $byTitle[$s['title']] = $s['body'];
+        }
+
+        // Sheet 1 — Overview
+        $w->addSheet('Overview');
+        $w->writeRow([$title], style: 'header', colWidths: [40, 60]);
+        $w->writeRow(['90-Day Content Calendar System'], style: 'bold');
+        $w->writeRow(['']);
+        $w->writeRow(['HOW TO USE THIS SPREADSHEET'], style: 'bold');
+        $usageText = $byTitle['How to Use This Calendar'] ?? 'See PDF for full usage guide.';
+        foreach ($this->chunkText($usageText, 800) as $chunk) {
+            $w->writeRow([$chunk]);
+        }
+        $w->writeRow(['']);
+        $w->writeRow(['YOUR CONTENT PILLARS'], style: 'bold');
+        $pillarsText = $byTitle['Your Content Pillars'] ?? '';
+        foreach ($this->chunkText($pillarsText, 600) as $chunk) {
+            $w->writeRow([$chunk]);
+        }
+
+        // Sheet 2 — 90-Day Calendar
+        $w->addSheet('90-Day Calendar');
+        $calHeaders = ['Day', 'Week', 'Date (fill in)', 'Platform', 'Content Pillar', 'Content Type', 'Topic', 'Hook', 'Caption Notes', 'Hashtags', 'CTA', 'Repurpose To', 'Status', 'Notes'];
+        $w->writeRow($calHeaders, style: 'header', colWidths: [6, 8, 14, 14, 16, 16, 28, 32, 32, 20, 18, 18, 14, 20]);
+        $w->addDropdown(12, 2, 91, ['Not started', 'In progress', 'Scheduled', 'Posted']);
+
+        // Parse post entries from Month sections
+        $calRows = $this->parseCalendarEntries($sections);
+
+        // Fill 90 rows — use parsed data where available, blank template otherwise
+        for ($day = 1; $day <= 90; $day++) {
+            $week = 'Week '.ceil($day / 7);
+            $entry = $calRows[$day] ?? [];
+            $style = ($day % 2 === 0) ? 'alt' : 'normal';
+            $w->writeRow([
+                $day,
+                $week,
+                '',  // buyer fills date
+                $entry['platform'] ?? '',
+                $entry['content_pillar'] ?? '',
+                $entry['content_type'] ?? '',
+                $entry['topic'] ?? '',
+                $entry['hook'] ?? '',
+                $entry['caption_notes'] ?? '',
+                $entry['hashtags'] ?? '',
+                $entry['cta'] ?? '',
+                $entry['repurpose_to'] ?? '',
+                'Not started',
+                '',
+            ], style: $style);
+        }
+
+        // Sheet 3 — Caption Frameworks
+        $w->addSheet('Caption Frameworks');
+        $w->writeRow(['Caption Frameworks — 10 Proven Structures', ''], style: 'header', colWidths: [30, 60]);
+        $captionText = $byTitle['Caption Frameworks'] ?? '';
+        $w->writeRow(['Framework', 'Full Description & Example'], style: 'bold');
+        foreach ($this->parseNumberedItems($captionText) as $item) {
+            $w->writeRow([$item['title'], $item['body']], style: 'normal');
+        }
+
+        // Sheet 4 — Hashtag Bank
+        $w->addSheet('Hashtag Bank');
+        $w->writeRow(['Platform', 'Hashtags'], style: 'header', colWidths: [20, 80]);
+        $hashText = $byTitle['Hashtag Strategy'] ?? $byTitle['Your Hashtag Strategy'] ?? '';
+        foreach ($this->chunkText($hashText, 400) as $chunk) {
+            $w->writeRow(['All Platforms', $chunk]);
+        }
+
+        // Sheet 5 — Repurposing Guide
+        $w->addSheet('Repurposing Guide');
+        $w->writeRow(['Repurposing Guide — One Idea, 5 Platforms', ''], style: 'header', colWidths: [30, 70]);
+        $repurposeText = $byTitle['Repurposing Guide'] ?? '';
+        $w->writeRow(['Original Idea / Platform', 'How to Repurpose It'], style: 'bold');
+        foreach ($this->chunkText($repurposeText, 500) as $chunk) {
+            $w->writeRow(['See PDF', $chunk]);
+        }
+
+        $absolute = $this->ensurePath($relPath);
+
+        return $w->save($absolute);
+    }
+
+    /**
+     * Excel Tracker XLSX — dynamic sheets from structure.
+     *
+     * @param  list<array{title:string,body:string}>  $sections
+     * @param  array<mixed>  $structure  structure_output from StructureJob
+     */
+    public function exportExcelTrackerXlsx(string $relPath, string $title, array $sections, array $structure): string
+    {
+        $w = new XlsxWriter;
+
+        $byTitle = [];
+        foreach ($sections as $s) {
+            $byTitle[$s['title']] = $s['body'];
+        }
+
+        // Sheet 1 — How To Use
+        $w->addSheet('How To Use');
+        $w->writeRow([$title], style: 'header', colWidths: [50, 60]);
+        $w->writeRow(['']);
+        $usageText = $byTitle['How to Use This Tracker'] ?? 'See PDF for usage guide.';
+        foreach ($this->chunkText($usageText, 700) as $chunk) {
+            $w->writeRow([$chunk]);
+        }
+
+        // Sheet 2 — Dashboard
+        $w->addSheet('Dashboard');
+        $w->writeRow(['Metric', 'Value', 'Notes'], style: 'header', colWidths: [30, 20, 40]);
+        $dashText = $byTitle['Tracker Specification'] ?? '';
+        foreach ($this->chunkText($dashText, 300) as $chunk) {
+            $w->writeRow(['—', '', $chunk]);
+        }
+
+        // Sheet 3+ from structure sheets
+        $sheets = $structure['sheets'] ?? [];
+        foreach ($sheets as $sheet) {
+            $sheetName = $this->safeSheetName($sheet['sheet_name'] ?? 'Sheet');
+            if (in_array($sheetName, ['How To Use', 'Dashboard'])) {
+                continue;
+            }
+
+            $w->addSheet($sheetName);
+            $columns = $sheet['columns'] ?? [];
+
+            if (empty($columns)) {
+                $w->writeRow([$sheetName.' — configure columns as needed'], style: 'header', colWidths: [40]);
+                $w->writeRow(['This sheet is ready for your data.']);
+
+                continue;
+            }
+
+            // Header row
+            $headers = array_column($columns, 'header');
+            $colWidths = array_fill(0, count($headers), 20);
+            $w->writeRow($headers, style: 'header', colWidths: $colWidths);
+
+            // Add dropdowns where defined
+            foreach ($columns as $ci => $col) {
+                $opts = $col['dropdown_options'] ?? [];
+                if ($opts && count($opts) > 0) {
+                    $optStr = implode(',', array_slice($opts, 0, 10));
+                    if (strlen($optStr) <= 250) {
+                        $w->addDropdown($ci, 2, 200, array_slice($opts, 0, 10));
+                    }
+                }
+            }
+
+            // 3 example rows
+            $exampleCount = $sheet['example_rows'] ?? 3;
+            for ($e = 1; $e <= min($exampleCount, 3); $e++) {
+                $row = [];
+                foreach ($columns as $col) {
+                    $row[] = match ($col['data_type'] ?? 'text') {
+                        'number' => $e * 100,
+                        'date' => '2024-0'.($e).'-01',
+                        'dropdown' => $col['dropdown_options'][0] ?? 'Option 1',
+                        default => '(Example '.($e).')',
+                    };
+                }
+                $w->writeRow($row, style: 'alt');
+            }
+
+            // Empty data rows
+            for ($r = 0; $r < 20; $r++) {
+                $w->writeRow(array_fill(0, count($headers), ''));
+            }
+        }
+
+        $absolute = $this->ensurePath($relPath);
+
+        return $w->save($absolute);
+    }
+
+    // ── XLSX helpers ──────────────────────────────────────────────────────────
+
+    /** Split long text into chunks that fit in a cell. */
+    private function chunkText(string $text, int $maxLen = 500): array
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return [''];
+        }
+
+        $paragraphs = preg_split("/\n\s*\n/", $text) ?: [$text];
+        $chunks = [];
+        $current = '';
+
+        foreach ($paragraphs as $para) {
+            $para = trim($para);
+            if ($para === '') {
+                continue;
+            }
+
+            if (strlen($current) + strlen($para) > $maxLen && $current !== '') {
+                $chunks[] = trim($current);
+                $current = $para;
+            } else {
+                $current .= ($current ? "\n\n" : '').$para;
+            }
+        }
+
+        if (trim($current) !== '') {
+            $chunks[] = trim($current);
+        }
+
+        return $chunks ?: [''];
+    }
+
+    /** Parse numbered items from text like "1. Title\n..." */
+    private function parseNumberedItems(string $text): array
+    {
+        $items = [];
+        if (preg_match_all('/^\d+[\.\)]\s+(.+?)(?=^\d+[\.\)]|\z)/ms', $text, $matches)) {
+            foreach ($matches[1] as $block) {
+                $block = trim($block);
+                $lines = explode("\n", $block, 2);
+                $items[] = ['title' => trim($lines[0]), 'body' => trim($lines[1] ?? '')];
+            }
+        } else {
+            foreach ($this->chunkText($text, 300) as $chunk) {
+                $items[] = ['title' => '—', 'body' => $chunk];
+            }
+        }
+
+        return $items;
+    }
+
+    /**
+     * Try to parse calendar post entries from Month sections.
+     * Returns array keyed by day number.
+     */
+    private function parseCalendarEntries(array $sections): array
+    {
+        $entries = [];
+        $dayOffset = 0;
+
+        foreach ($sections as $section) {
+            if (! preg_match('/^Month\s+(\d+)/i', $section['title'] ?? '', $m)) {
+                continue;
+            }
+
+            $monthNum = (int) $m[1];
+            $dayOffset = ($monthNum - 1) * 30;
+            $body = $section['body'] ?? '';
+
+            // Try to match lines like "Day N |..." or "Day N:" or numbered lists
+            $lines = explode("\n", $body);
+            $localDay = 0;
+
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+
+                // Pattern: "Day X" or "Day X:"
+                if (preg_match('/^Day\s+(\d+)[:\|]?\s*/i', $line, $dm)) {
+                    $localDay = (int) $dm[1];
+                    $rest = trim(substr($line, strlen($dm[0])));
+                    $day = $dayOffset + $localDay;
+                    if ($day >= 1 && $day <= 90) {
+                        // Try to parse pipe-separated fields
+                        $parts = array_map('trim', explode('|', $rest));
+                        $entries[$day] = [
+                            'platform' => $parts[0] ?? '',
+                            'content_pillar' => $parts[1] ?? '',
+                            'content_type' => $parts[2] ?? '',
+                            'topic' => $parts[3] ?? $rest,
+                            'hook' => $parts[4] ?? '',
+                            'caption_notes' => $parts[5] ?? '',
+                            'hashtags' => $parts[6] ?? '',
+                            'cta' => $parts[7] ?? '',
+                            'repurpose_to' => $parts[8] ?? '',
+                        ];
+                    }
+                } elseif ($localDay > 0 && isset($entries[$dayOffset + $localDay])) {
+                    // Append to topic of current day
+                    $entries[$dayOffset + $localDay]['topic'] .= ' '.$line;
+                }
+            }
+        }
+
+        return $entries;
+    }
+
+    /** Sanitise sheet name for Excel (max 31 chars, no special chars). */
+    private function safeSheetName(string $name): string
+    {
+        $name = preg_replace('/[\/\\\\?\*\[\]:]/', '', $name) ?? $name;
+
+        return mb_substr(trim($name), 0, 31);
+    }
+
     /** Split a chapter body into paragraphs by blank lines. */
     private function paragraphs(string $body): array
     {

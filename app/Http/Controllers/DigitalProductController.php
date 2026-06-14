@@ -282,8 +282,13 @@ class DigitalProductController extends Controller
     public function export(DigitalProduct $digitalProduct, string $format, ExportService $export)
     {
         $this->authorise($digitalProduct);
-        abort_unless(in_array($format, ['premium', 'kdp', 'master']), 404);
+        abort_unless(in_array($format, ['premium', 'kdp', 'master', 'xlsx']), 404);
         abort_if(! $digitalProduct->content_output, 404, 'Content not generated yet.');
+
+        // XLSX only for types that support it
+        if ($format === 'xlsx') {
+            abort_unless(in_array($digitalProduct->product_type, DigitalProduct::xlsxTypes()), 404);
+        }
 
         $title = $digitalProduct->product_title ?: Str::title($digitalProduct->niche);
         $author = $digitalProduct->user->getSettings()->author_name ?: $digitalProduct->user->name;
@@ -299,6 +304,11 @@ class DigitalProductController extends Controller
             'premium' => $export->exportDigitalProductPdf("{$relDir}/premium.pdf", $digitalProduct->product_type, $title, $author, $tagline, $sections, '#6C3CE1', $productTypeLabel),
             'kdp' => $export->exportKdpDocx("{$relDir}/kdp-version.docx", $title, $author, $subtitle, $sections),
             'master' => $export->exportMasterDocx("{$relDir}/master.docx", $title, $author, $subtitle, $sections),
+            'xlsx' => match ($digitalProduct->product_type) {
+                'content_calendar_system' => $export->exportContentCalendarXlsx("{$relDir}/content-calendar.xlsx", $title, $sections),
+                'excel_tracker' => $export->exportExcelTrackerXlsx("{$relDir}/tracker.xlsx", $title, $sections, $digitalProduct->structure_output ?? []),
+                default => abort(404),
+            },
         };
 
         return response()->download($absolute, basename($absolute));

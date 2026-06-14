@@ -279,6 +279,11 @@
         @endif
 
         {{-- Download buttons --}}
+        @php
+            $isXlsxType = in_array($product->product_type, \App\Models\DigitalProduct::xlsxTypes());
+            $isKdpType  = in_array($product->product_type, \App\Models\DigitalProduct::kdpTypes());
+            $isNoKdp    = in_array($product->product_type, ['excel_tracker','notion_business_os']);
+        @endphp
         <div style="border-top:1px solid #E4E0F0;margin-top:1rem;padding-top:1rem;">
             <p style="font-size:0.85rem;font-weight:700;color:#0F0A1E;margin:0 0 0.5rem;">📥 Download your product</p>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.5rem;">
@@ -286,14 +291,32 @@
                     📄 Premium PDF
                     <div style="font-size:0.65rem;font-weight:500;opacity:0.85;margin-top:2px;">Gumroad · Selar · Payhip</div>
                 </a>
+                <a href="{{ route('digital-products.export', [$product, 'master']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
+                    ✏️ Master DOCX
+                    <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">Editable Word file</div>
+                </a>
+                @if($isXlsxType)
+                <a href="{{ route('digital-products.export', [$product, 'xlsx']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;border-color:#059669;color:#059669;">
+                    📊 Download Excel File
+                    <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">Excel · Google Sheets</div>
+                </a>
+                @endif
+                @if($isKdpType)
                 <a href="{{ route('digital-products.export', [$product, 'kdp']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
                     📦 KDP Word File
                     <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">Amazon KDP upload</div>
                 </a>
-                <a href="{{ route('digital-products.export', [$product, 'master']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
-                    ✏️ Master DOCX
-                    <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">For your own edits</div>
+                @elseif($isNoKdp)
+                <div style="text-align:center;padding:0.65rem 0.85rem;font-size:0.75rem;color:#9B93B0;background:#F5F4FF;border-radius:10px;border:1px dashed #D0CAEE;">
+                    ℹ️ No KDP version<br>
+                    <span style="font-size:0.65rem;">Not a book format</span>
+                </div>
+                @else
+                <a href="{{ route('digital-products.export', [$product, 'kdp']) }}" class="btn-outline" style="text-decoration:none;text-align:center;padding:0.65rem 0.85rem;font-size:0.78rem;">
+                    📦 KDP Word File
+                    <div style="font-size:0.65rem;font-weight:500;opacity:0.7;margin-top:2px;">Amazon KDP upload</div>
                 </a>
+                @endif
             </div>
         </div>
 
