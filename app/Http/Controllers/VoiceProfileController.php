@@ -45,8 +45,8 @@ class VoiceProfileController extends Controller
 
         $profile = auth()->user()->voiceProfiles()->create([
             'name' => $data['name'],
-            'emoji' => $data['emoji'] ?: '✍️',
-            'color' => $data['color'] ?: '#6C3CE1',
+            'emoji' => ($data['emoji'] ?? '') ?: '✍️',
+            'color' => ($data['color'] ?? '') ?: '#6C3CE1',
             'description' => $data['description'] ?? null,
             'is_default' => $isDefault,
             'status' => 'draft',

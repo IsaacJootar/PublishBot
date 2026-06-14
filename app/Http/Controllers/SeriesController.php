@@ -172,8 +172,8 @@ class SeriesController extends Controller
             $data['characters'] = [];
         }
 
-        $data['emoji'] = $data['emoji'] ?: '📚';
-        $data['color'] = $data['color'] ?: '#6C3CE1';
+        $data['emoji'] = ($data['emoji'] ?? '') ?: '📚';
+        $data['color'] = ($data['color'] ?? '') ?: '#6C3CE1';
 
         return $data;
     }
