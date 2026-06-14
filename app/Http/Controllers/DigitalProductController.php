@@ -290,6 +290,11 @@ class DigitalProductController extends Controller
             abort_unless(in_array($digitalProduct->product_type, DigitalProduct::xlsxTypes()), 404);
         }
 
+        // KDP blocked for the 2 non-book types (excel_tracker, notion_business_os)
+        if ($format === 'kdp') {
+            abort_if(in_array($digitalProduct->product_type, ['excel_tracker', 'notion_business_os']), 404, 'KDP not available for this product type.');
+        }
+
         $title = $digitalProduct->product_title ?: Str::title($digitalProduct->niche);
         $author = $digitalProduct->user->getSettings()->author_name ?: $digitalProduct->user->name;
         $subtitle = null;
