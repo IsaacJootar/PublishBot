@@ -307,8 +307,17 @@ class DigitalProductController extends Controller
     private function parseSections(DigitalProduct $product): array
     {
         $raw = (string) $product->content_output;
-        $sections = [];
 
+        // New extended types store content as JSON with a 'sections' key
+        if (in_array($product->product_type, DigitalProduct::extendedTypes())) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded) && isset($decoded['sections'])) {
+                return $decoded['sections'];
+            }
+        }
+
+        // Original 3 types — plain text with CATEGORY/SOP/SEQUENCE headers
+        $sections = [];
         if (preg_match_all('/^(CATEGORY|SOP|SEQUENCE)\s+\d+:\s*(.+)$/m', $raw, $matches, PREG_OFFSET_CAPTURE)) {
             $count = count($matches[0]);
             for ($i = 0; $i < $count; $i++) {
