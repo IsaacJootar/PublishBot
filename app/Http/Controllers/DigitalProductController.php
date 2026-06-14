@@ -45,23 +45,60 @@ class DigitalProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $allTypes = implode(',', array_keys(DigitalProduct::productTypes()));
+
         $data = $request->validate([
-            'product_type' => ['required', 'string', 'in:prompt_library,sop_pack,email_sequence_vault'],
-            'niche' => ['required', 'string', 'max:200'],
-            'buyer_description' => ['required', 'string', 'max:500'],
-            'buyer_problem' => ['required', 'string', 'max:500'],
+            'product_type' => ['required', 'string', "in:{$allTypes}"],
+            'niche' => ['required', 'string', 'max:500'],
+            'buyer_description' => ['required', 'string', 'max:1000'],
+            'buyer_problem' => ['required', 'string', 'max:1000'],
             'voice_profile_id' => ['nullable', 'integer', 'exists:voice_profiles,id'],
-            // Prompt library
+            // Original types
             'prompt_count' => ['nullable', 'integer', 'in:30,50,75'],
             'categories' => ['nullable', 'string', 'max:500'],
-            // SOP pack
             'business_type' => ['nullable', 'string', 'max:200'],
             'sop_count' => ['nullable', 'integer', 'in:10,20,30'],
             'key_areas' => ['nullable', 'string', 'max:500'],
-            // Email vault
             'sequence_types' => ['nullable', 'string', 'max:500'],
             'sequence_count' => ['nullable', 'integer', 'in:5,10,15'],
             'emails_per_sequence' => ['nullable', 'integer', 'in:3,5,7'],
+            // Content Calendar System
+            'platforms' => ['nullable', 'array'],
+            'platforms.*' => ['nullable', 'string', 'max:50'],
+            'posting_frequency' => ['nullable', 'string', 'in:3,5,7,Daily'],
+            'content_goals' => ['nullable', 'array'],
+            'content_goals.*' => ['nullable', 'string', 'max:50'],
+            'tone' => ['nullable', 'string', 'max:100'],
+            // Excel Tracker
+            'tracker_type' => ['nullable', 'string', 'max:100'],
+            'team_size' => ['nullable', 'string', 'max:50'],
+            // Notion OS
+            'client_count' => ['nullable', 'string', 'max:20'],
+            'organise_areas' => ['nullable', 'array'],
+            'organise_areas.*' => ['nullable', 'string', 'max:50'],
+            'current_tools' => ['nullable', 'string', 'max:500'],
+            // Website Copy Pack + Brand Messaging + Sales Funnel
+            'business_name' => ['nullable', 'string', 'max:200'],
+            'founder_name' => ['nullable', 'string', 'max:200'],
+            'differentiator' => ['nullable', 'string', 'max:1000'],
+            'service_count' => ['nullable', 'integer', 'in:1,2,3,4,5'],
+            'service_names' => ['nullable', 'string', 'max:500'],
+            'business_location' => ['nullable', 'string', 'max:200'],
+            'core_values' => ['nullable', 'string', 'max:500'],
+            'personality_words' => ['nullable', 'string', 'max:200'],
+            'avoid_sounding_like' => ['nullable', 'string', 'max:200'],
+            'price_point' => ['nullable', 'string', 'max:100'],
+            'tried_before' => ['nullable', 'string', 'max:500'],
+            'needs_upsell' => ['nullable', 'string', 'in:Yes,No'],
+            'needs_webinar' => ['nullable', 'string', 'in:Yes,No'],
+            // Niche Research Report
+            'geography' => ['nullable', 'string', 'max:100'],
+            'report_depth' => ['nullable', 'string', 'max:50'],
+            'competitors' => ['nullable', 'string', 'max:500'],
+            'specific_questions' => ['nullable', 'string', 'max:1000'],
+            // Buyer Persona Pack
+            'persona_count' => ['nullable', 'integer', 'in:3,4,5'],
+            'persona_types' => ['nullable', 'string', 'max:500'],
         ]);
 
         $voiceId = $data['voice_profile_id'] ?? null;
@@ -73,8 +110,9 @@ class DigitalProductController extends Controller
         }
 
         $briefOptions = match ($data['product_type']) {
+            // ── Original types ────────────────────────────────────────────
             'prompt_library' => [
-                'prompt_count' => $data['prompt_count'] ?? 30,
+                'prompt_count' => $data['prompt_count'] ?? 50,
                 'categories' => $data['categories'] ?? '',
             ],
             'sop_pack' => [
@@ -86,6 +124,60 @@ class DigitalProductController extends Controller
                 'sequence_types' => $data['sequence_types'] ?? '',
                 'sequence_count' => $data['sequence_count'] ?? 5,
                 'emails_per_sequence' => $data['emails_per_sequence'] ?? 5,
+            ],
+            // ── Extended types ────────────────────────────────────────────
+            'content_calendar_system' => [
+                'platforms' => $data['platforms'] ?? ['Instagram', 'LinkedIn'],
+                'posting_frequency' => $data['posting_frequency'] ?? '5',
+                'content_goals' => $data['content_goals'] ?? ['Brand awareness', 'Authority'],
+                'tone' => $data['tone'] ?? 'Educational',
+            ],
+            'excel_tracker' => [
+                'tracker_type' => $data['tracker_type'] ?? 'Client tracker',
+                'team_size' => $data['team_size'] ?? 'Just me',
+            ],
+            'notion_business_os' => [
+                'team_size' => $data['team_size'] ?? 'Solo',
+                'client_count' => $data['client_count'] ?? '1-5',
+                'organise_areas' => $data['organise_areas'] ?? ['Clients', 'Projects', 'Finance'],
+                'current_tools' => $data['current_tools'] ?? '',
+            ],
+            'website_copy_pack' => [
+                'business_name' => $data['business_name'] ?? $data['niche'],
+                'differentiator' => $data['differentiator'] ?? '',
+                'tone' => $data['tone'] ?? 'Friendly and warm',
+                'service_count' => $data['service_count'] ?? 2,
+                'service_names' => $data['service_names'] ?? '',
+                'business_location' => $data['business_location'] ?? '',
+            ],
+            'brand_messaging_system' => [
+                'business_name' => $data['business_name'] ?? $data['niche'],
+                'founder_name' => $data['founder_name'] ?? '',
+                'differentiator' => $data['differentiator'] ?? '',
+                'core_values' => $data['core_values'] ?? '',
+                'personality_words' => $data['personality_words'] ?? '',
+                'avoid_sounding_like' => $data['avoid_sounding_like'] ?? '',
+                'price_point' => $data['price_point'] ?? '',
+            ],
+            'sales_funnel_copy' => [
+                'price_point' => $data['price_point'] ?? '',
+                'tried_before' => $data['tried_before'] ?? '',
+                'differentiator' => $data['differentiator'] ?? '',
+                'tone' => $data['tone'] ?? 'Friendly',
+                'needs_upsell' => $data['needs_upsell'] ?? 'No',
+                'needs_webinar' => $data['needs_webinar'] ?? 'No',
+            ],
+            'niche_research_report' => [
+                'geography' => $data['geography'] ?? 'Nigeria',
+                'report_depth' => $data['report_depth'] ?? 'Standard (20 pages)',
+                'competitors' => $data['competitors'] ?? '',
+                'specific_questions' => $data['specific_questions'] ?? '',
+            ],
+            'buyer_persona_pack' => [
+                'price_point' => $data['price_point'] ?? '',
+                'persona_count' => $data['persona_count'] ?? 3,
+                'geography' => $data['geography'] ?? 'Nigeria',
+                'persona_types' => $data['persona_types'] ?? '',
             ],
         };
 
@@ -199,12 +291,7 @@ class DigitalProductController extends Controller
         $tagline = $digitalProduct->structure_output['tagline'] ?? null;
         $sections = $this->parseSections($digitalProduct);
 
-        $productTypeLabel = match ($digitalProduct->product_type) {
-            'prompt_library' => 'Prompt Library',
-            'sop_pack' => 'SOP Pack',
-            'email_sequence_vault' => 'Email Sequence Vault',
-            default => null,
-        };
+        $productTypeLabel = DigitalProduct::productTypes()[$digitalProduct->product_type]['name'] ?? null;
 
         $relDir = "users/{$digitalProduct->user_id}/digital-products/{$digitalProduct->id}";
 
