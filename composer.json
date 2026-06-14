@@ -16,6 +16,7 @@
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.3",
         "openai-php/laravel": "^0.19.1",
+        "phpoffice/phpspreadsheet": "^5.8",
         "phpoffice/phpword": "^1.4",
         "resend/resend-laravel": "^1.4"
     },

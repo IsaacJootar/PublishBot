@@ -3,6 +3,13 @@
 namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxExporter;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\SimpleType\Jc;
@@ -325,7 +332,7 @@ class ExportService
         return $absolute;
     }
 
-    // ── XLSX exports ──────────────────────────────────────────────────────────
+    // ── XLSX exports (PhpSpreadsheet) ─────────────────────────────────────────
 
     /**
      * Content Calendar XLSX — 5 sheets.
@@ -334,49 +341,84 @@ class ExportService
      */
     public function exportContentCalendarXlsx(string $relPath, string $title, array $sections): string
     {
-        $w = new XlsxWriter;
-
-        // Index sections by title
         $byTitle = [];
         foreach ($sections as $s) {
             $byTitle[$s['title']] = $s['body'];
         }
 
-        // Sheet 1 — Overview
-        $w->addSheet('Overview');
-        $w->writeRow([$title], style: 'header', colWidths: [40, 60]);
-        $w->writeRow(['90-Day Content Calendar System'], style: 'bold');
-        $w->writeRow(['']);
-        $w->writeRow(['HOW TO USE THIS SPREADSHEET'], style: 'bold');
+        $ss = new Spreadsheet;
+        $ss->getProperties()->setTitle($title)->setCreator('PublishBot');
+
+        // ── Sheet 1: Overview ──────────────────────────────────────────────
+        $sh = $ss->getActiveSheet()->setTitle('Overview');
+        $sh->getColumnDimension('A')->setWidth(80);
+
+        $row = 1;
+        $sh->setCellValue("A{$row}", $title);
+        $this->styleHeader($sh, "A{$row}:A{$row}");
+        $sh->getStyle("A{$row}")->getFont()->setSize(16);
+        $row++;
+
+        $sh->setCellValue("A{$row}", '90-Day Content Calendar System');
+        $this->styleBold($sh, "A{$row}:A{$row}");
+        $row += 2;
+
+        $sh->setCellValue("A{$row}", 'HOW TO USE THIS SPREADSHEET');
+        $this->styleBold($sh, "A{$row}:A{$row}");
+        $row++;
+
         $usageText = $byTitle['How to Use This Calendar'] ?? 'See PDF for full usage guide.';
-        foreach ($this->chunkText($usageText, 800) as $chunk) {
-            $w->writeRow([$chunk]);
+        foreach (explode("\n", $usageText) as $line) {
+            $sh->setCellValue("A{$row}", $line);
+            $sh->getStyle("A{$row}")->getAlignment()->setWrapText(true);
+            $row++;
         }
-        $w->writeRow(['']);
-        $w->writeRow(['YOUR CONTENT PILLARS'], style: 'bold');
+        $row++;
+
+        $sh->setCellValue("A{$row}", 'YOUR CONTENT PILLARS');
+        $this->styleBold($sh, "A{$row}:A{$row}");
+        $row++;
+
         $pillarsText = $byTitle['Your Content Pillars'] ?? '';
-        foreach ($this->chunkText($pillarsText, 600) as $chunk) {
-            $w->writeRow([$chunk]);
+        foreach (explode("\n", $pillarsText) as $line) {
+            $sh->setCellValue("A{$row}", $line);
+            $sh->getStyle("A{$row}")->getAlignment()->setWrapText(true);
+            $row++;
         }
 
-        // Sheet 2 — 90-Day Calendar
-        $w->addSheet('90-Day Calendar');
-        $calHeaders = ['Day', 'Week', 'Date (fill in)', 'Platform', 'Content Pillar', 'Content Type', 'Topic', 'Hook', 'Caption Notes', 'Hashtags', 'CTA', 'Repurpose To', 'Status', 'Notes'];
-        $w->writeRow($calHeaders, style: 'header', colWidths: [6, 8, 14, 14, 16, 16, 28, 32, 32, 20, 18, 18, 14, 20]);
-        $w->addDropdown(12, 2, 91, ['Not started', 'In progress', 'Scheduled', 'Posted']);
+        // ── Sheet 2: 90-Day Calendar ───────────────────────────────────────
+        $cal = $ss->createSheet()->setTitle('90-Day Calendar');
+        $headers = ['Day', 'Week', 'Date (fill in)', 'Platform', 'Content Pillar', 'Content Type', 'Topic', 'Hook', 'Caption Notes', 'Hashtags', 'CTA', 'Repurpose To', 'Status', 'Notes'];
+        $widths = [6,     8,     14,               16,         18,               18,              34,       38,      36,              22,         18,    22,            14,       24];
 
-        // Parse post entries from Month sections
+        foreach ($headers as $ci => $hdr) {
+            $col = Coordinate::stringFromColumnIndex($ci + 1);
+            $cal->setCellValue("{$col}1", $hdr);
+            $cal->getColumnDimension($col)->setWidth($widths[$ci]);
+        }
+        $this->styleHeader($cal, 'A1:'.Coordinate::stringFromColumnIndex(count($headers)).'1');
+        $cal->freezePane('A2');
+
+        // Status dropdown
         $calRows = $this->parseCalendarEntries($sections);
+        $statusCol = Coordinate::stringFromColumnIndex(13); // M
+        $dv = new DataValidation;
+        $dv->setType(DataValidation::TYPE_LIST)
+            ->setErrorStyle(DataValidation::STYLE_INFORMATION)
+            ->setAllowBlank(false)
+            ->setShowDropDown(false)
+            ->setFormula1('"Not started,In progress,Scheduled,Posted"');
 
-        // Fill 90 rows — use parsed data where available, blank template otherwise
         for ($day = 1; $day <= 90; $day++) {
-            $week = 'Week '.ceil($day / 7);
+            $r = $day + 1;
+            $week = 'Week '.(int) ceil($day / 7);
             $entry = $calRows[$day] ?? [];
-            $style = ($day % 2 === 0) ? 'alt' : 'normal';
-            $w->writeRow([
+            $altBg = ($day % 2 === 0);
+
+            $values = [
                 $day,
                 $week,
-                '',  // buyer fills date
+                '',
                 $entry['platform'] ?? '',
                 $entry['content_pillar'] ?? '',
                 $entry['content_type'] ?? '',
@@ -388,165 +430,263 @@ class ExportService
                 $entry['repurpose_to'] ?? '',
                 'Not started',
                 '',
-            ], style: $style);
-        }
+            ];
 
-        // Sheet 3 — Caption Frameworks
-        $w->addSheet('Caption Frameworks');
-        $w->writeRow(['Caption Frameworks — 10 Proven Structures', ''], style: 'header', colWidths: [30, 60]);
+            foreach ($values as $ci => $val) {
+                $col = Coordinate::stringFromColumnIndex($ci + 1);
+                $cal->setCellValue("{$col}{$r}", $val);
+                $cal->getStyle("{$col}{$r}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+                if ($altBg) {
+                    $cal->getStyle("{$col}{$r}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF5F4FF');
+                }
+            }
+
+            $cal->getRowDimension($r)->setRowHeight(40);
+
+            // Apply dropdown to Status column
+            $cloned = clone $dv;
+            $cal->getCell("{$statusCol}{$r}")->setDataValidation($cloned);
+        }
+        $cal->getRowDimension(1)->setRowHeight(22);
+
+        // ── Sheet 3: Caption Frameworks ────────────────────────────────────
+        $cap = $ss->createSheet()->setTitle('Caption Frameworks');
+        $cap->getColumnDimension('A')->setWidth(30);
+        $cap->getColumnDimension('B')->setWidth(70);
+        $cap->setCellValue('A1', 'Framework');
+        $cap->setCellValue('B1', 'Description & Example');
+        $this->styleHeader($cap, 'A1:B1');
+        $cap->freezePane('A2');
+
         $captionText = $byTitle['Caption Frameworks'] ?? '';
-        $w->writeRow(['Framework', 'Full Description & Example'], style: 'bold');
+        $capRow = 2;
         foreach ($this->parseNumberedItems($captionText) as $item) {
-            $w->writeRow([$item['title'], $item['body']], style: 'normal');
+            $cap->setCellValue("A{$capRow}", $item['title']);
+            $cap->setCellValue("B{$capRow}", $item['body']);
+            $cap->getStyle("A{$capRow}:B{$capRow}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+            $cap->getRowDimension($capRow)->setRowHeight(60);
+            $capRow++;
         }
 
-        // Sheet 4 — Hashtag Bank
-        $w->addSheet('Hashtag Bank');
-        $w->writeRow(['Platform', 'Hashtags'], style: 'header', colWidths: [20, 80]);
+        // ── Sheet 4: Hashtag Bank ──────────────────────────────────────────
+        $hash = $ss->createSheet()->setTitle('Hashtag Bank');
+        $hash->getColumnDimension('A')->setWidth(22);
+        $hash->getColumnDimension('B')->setWidth(80);
+        $hash->setCellValue('A1', 'Platform');
+        $hash->setCellValue('B1', 'Hashtags');
+        $this->styleHeader($hash, 'A1:B1');
+        $hash->freezePane('A2');
+
         $hashText = $byTitle['Hashtag Strategy'] ?? $byTitle['Your Hashtag Strategy'] ?? '';
-        foreach ($this->chunkText($hashText, 400) as $chunk) {
-            $w->writeRow(['All Platforms', $chunk]);
+        $hashRow = 2;
+        foreach (array_filter(explode("\n", $hashText)) as $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+
+            // Lines like "Instagram: #tag1 #tag2" or "Platform: hashtags"
+            if (preg_match('/^([A-Za-z\/ ]+):\s*(.+)$/', $line, $hm)) {
+                $hash->setCellValue("A{$hashRow}", trim($hm[1]));
+                $hash->setCellValue("B{$hashRow}", trim($hm[2]));
+            } else {
+                $hash->setCellValue("B{$hashRow}", trim($line));
+            }
+            $hash->getStyle("A{$hashRow}:B{$hashRow}")->getAlignment()->setWrapText(true);
+            $hashRow++;
         }
 
-        // Sheet 5 — Repurposing Guide
-        $w->addSheet('Repurposing Guide');
-        $w->writeRow(['Repurposing Guide — One Idea, 5 Platforms', ''], style: 'header', colWidths: [30, 70]);
-        $repurposeText = $byTitle['Repurposing Guide'] ?? '';
-        $w->writeRow(['Original Idea / Platform', 'How to Repurpose It'], style: 'bold');
-        foreach ($this->chunkText($repurposeText, 500) as $chunk) {
-            $w->writeRow(['See PDF', $chunk]);
+        // ── Sheet 5: Repurposing Guide ─────────────────────────────────────
+        $rep = $ss->createSheet()->setTitle('Repurposing Guide');
+        $rep->getColumnDimension('A')->setWidth(30);
+        $rep->getColumnDimension('B')->setWidth(70);
+        $rep->setCellValue('A1', 'Original Content Idea');
+        $rep->setCellValue('B1', 'How to Repurpose It');
+        $this->styleHeader($rep, 'A1:B1');
+        $rep->freezePane('A2');
+
+        $repText = $byTitle['Repurposing Guide'] ?? '';
+        $repRow = 2;
+        foreach (array_filter(array_map('trim', preg_split('/\n{2,}/', $repText) ?: [])) as $block) {
+            $rep->setCellValue("A{$repRow}", 'See block below');
+            $rep->setCellValue("B{$repRow}", $block);
+            $rep->getStyle("B{$repRow}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+            $rep->getRowDimension($repRow)->setRowHeight(80);
+            $repRow++;
         }
+
+        $ss->setActiveSheetIndex(1); // default to calendar sheet
 
         $absolute = $this->ensurePath($relPath);
+        (new XlsxExporter($ss))->save($absolute);
 
-        return $w->save($absolute);
+        return $absolute;
     }
 
     /**
-     * Excel Tracker XLSX — dynamic sheets from structure.
+     * Excel Tracker XLSX — dynamic sheets from AI structure.
      *
      * @param  list<array{title:string,body:string}>  $sections
      * @param  array<mixed>  $structure  structure_output from StructureJob
      */
     public function exportExcelTrackerXlsx(string $relPath, string $title, array $sections, array $structure): string
     {
-        $w = new XlsxWriter;
-
         $byTitle = [];
         foreach ($sections as $s) {
             $byTitle[$s['title']] = $s['body'];
         }
 
-        // Sheet 1 — How To Use
-        $w->addSheet('How To Use');
-        $w->writeRow([$title], style: 'header', colWidths: [50, 60]);
-        $w->writeRow(['']);
+        $ss = new Spreadsheet;
+        $ss->getProperties()->setTitle($title)->setCreator('PublishBot');
+
+        // ── Sheet 1: How To Use ────────────────────────────────────────────
+        $sh = $ss->getActiveSheet()->setTitle('How To Use');
+        $sh->getColumnDimension('A')->setWidth(80);
+        $sh->setCellValue('A1', $title);
+        $this->styleHeader($sh, 'A1:A1');
+        $sh->getStyle('A1')->getFont()->setSize(16);
+
+        $row = 2;
         $usageText = $byTitle['How to Use This Tracker'] ?? 'See PDF for usage guide.';
-        foreach ($this->chunkText($usageText, 700) as $chunk) {
-            $w->writeRow([$chunk]);
+        foreach (explode("\n", $usageText) as $line) {
+            $sh->setCellValue("A{$row}", $line);
+            $sh->getStyle("A{$row}")->getAlignment()->setWrapText(true);
+            $row++;
         }
 
-        // Sheet 2 — Dashboard
-        $w->addSheet('Dashboard');
-        $w->writeRow(['Metric', 'Value', 'Notes'], style: 'header', colWidths: [30, 20, 40]);
+        // ── Sheet 2: Dashboard ─────────────────────────────────────────────
+        $dash = $ss->createSheet()->setTitle('Dashboard');
+        $dash->getColumnDimension('A')->setWidth(32);
+        $dash->getColumnDimension('B')->setWidth(22);
+        $dash->getColumnDimension('C')->setWidth(50);
+        $dash->setCellValue('A1', 'Metric');
+        $dash->setCellValue('B1', 'Value');
+        $dash->setCellValue('C1', 'Notes / Formula');
+        $this->styleHeader($dash, 'A1:C1');
+        $dash->freezePane('A2');
+
         $dashText = $byTitle['Tracker Specification'] ?? '';
-        foreach ($this->chunkText($dashText, 300) as $chunk) {
-            $w->writeRow(['—', '', $chunk]);
+        $dashRow = 2;
+        foreach (array_filter(array_map('trim', explode("\n", $dashText))) as $line) {
+            if (preg_match('/^[A-Z\s]{3,}:/', $line)) {
+                // Section header line
+                $dash->setCellValue("A{$dashRow}", $line);
+                $this->styleBold($dash, "A{$dashRow}:C{$dashRow}");
+            } else {
+                $dash->setCellValue("C{$dashRow}", $line);
+            }
+            $dash->getStyle("A{$dashRow}:C{$dashRow}")->getAlignment()->setWrapText(true);
+            $dashRow++;
         }
 
-        // Sheet 3+ from structure sheets
-        $sheets = $structure['sheets'] ?? [];
-        foreach ($sheets as $sheet) {
-            $sheetName = $this->safeSheetName($sheet['sheet_name'] ?? 'Sheet');
+        // ── Sheet 3+: Tracker sheets from structure ────────────────────────
+        $structSheets = $structure['sheets'] ?? [];
+        foreach ($structSheets as $sheetDef) {
+            $sheetName = $this->safeSheetName($sheetDef['sheet_name'] ?? 'Tracker');
             if (in_array($sheetName, ['How To Use', 'Dashboard'])) {
                 continue;
             }
 
-            $w->addSheet($sheetName);
-            $columns = $sheet['columns'] ?? [];
+            $ts = $ss->createSheet()->setTitle($sheetName);
+            $columns = $sheetDef['columns'] ?? [];
 
             if (empty($columns)) {
-                $w->writeRow([$sheetName.' — configure columns as needed'], style: 'header', colWidths: [40]);
-                $w->writeRow(['This sheet is ready for your data.']);
+                $ts->getColumnDimension('A')->setWidth(50);
+                $ts->setCellValue('A1', $sheetName.' — configure columns as needed');
+                $this->styleHeader($ts, 'A1:A1');
 
                 continue;
             }
 
             // Header row
-            $headers = array_column($columns, 'header');
-            $colWidths = array_fill(0, count($headers), 20);
-            $w->writeRow($headers, style: 'header', colWidths: $colWidths);
-
-            // Add dropdowns where defined
             foreach ($columns as $ci => $col) {
-                $opts = $col['dropdown_options'] ?? [];
-                if ($opts && count($opts) > 0) {
-                    $optStr = implode(',', array_slice($opts, 0, 10));
-                    if (strlen($optStr) <= 250) {
-                        $w->addDropdown($ci, 2, 200, array_slice($opts, 0, 10));
-                    }
+                $colLetter = Coordinate::stringFromColumnIndex($ci + 1);
+                $ts->setCellValue("{$colLetter}1", $col['header'] ?? 'Column '.($ci + 1));
+                $ts->getColumnDimension($colLetter)->setWidth(22);
+            }
+            $lastCol = Coordinate::stringFromColumnIndex(count($columns));
+            $this->styleHeader($ts, "A1:{$lastCol}1");
+            $ts->freezePane('A2');
+            $ts->getRowDimension(1)->setRowHeight(22);
+
+            // Dropdowns
+            foreach ($columns as $ci => $col) {
+                $opts = array_slice($col['dropdown_options'] ?? [], 0, 10);
+                if (! $opts) {
+                    continue;
+                }
+
+                $formula = '"'.implode(',', array_map(fn ($o) => str_replace('"', '""', $o), $opts)).'"';
+                if (strlen($formula) > 255) {
+                    continue; // Excel inline list limit
+                }
+
+                $colLetter = Coordinate::stringFromColumnIndex($ci + 1);
+                for ($r = 2; $r <= 200; $r++) {
+                    $dv = new DataValidation;
+                    $dv->setType(DataValidation::TYPE_LIST)
+                        ->setErrorStyle(DataValidation::STYLE_INFORMATION)
+                        ->setAllowBlank(true)
+                        ->setShowDropDown(false)
+                        ->setFormula1($formula);
+                    $ts->getCell("{$colLetter}{$r}")->setDataValidation($dv);
                 }
             }
 
-            // 3 example rows
-            $exampleCount = $sheet['example_rows'] ?? 3;
-            for ($e = 1; $e <= min($exampleCount, 3); $e++) {
-                $row = [];
-                foreach ($columns as $col) {
-                    $row[] = match ($col['data_type'] ?? 'text') {
+            // 3 example rows (alt background)
+            $exampleCount = min((int) ($sheetDef['example_rows'] ?? 3), 3);
+            for ($e = 1; $e <= $exampleCount; $e++) {
+                $r = $e + 1;
+                foreach ($columns as $ci => $col) {
+                    $colLetter = Coordinate::stringFromColumnIndex($ci + 1);
+                    $val = match ($col['data_type'] ?? 'text') {
                         'number' => $e * 100,
-                        'date' => '2024-0'.($e).'-01',
+                        'date' => date('Y-m-d', mktime(0, 0, 0, $e, 1, 2024)),
                         'dropdown' => $col['dropdown_options'][0] ?? 'Option 1',
-                        default => '(Example '.($e).')',
+                        default => '(Example '.$e.')',
                     };
+                    $ts->setCellValue("{$colLetter}{$r}", $val);
+                    $ts->getStyle("{$colLetter}{$r}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF5F4FF');
+                    $ts->getStyle("{$colLetter}{$r}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
                 }
-                $w->writeRow($row, style: 'alt');
+                $ts->getRowDimension($r)->setRowHeight(30);
             }
 
-            // Empty data rows
-            for ($r = 0; $r < 20; $r++) {
-                $w->writeRow(array_fill(0, count($headers), ''));
+            // 50 empty data rows
+            for ($r = $exampleCount + 2; $r <= $exampleCount + 51; $r++) {
+                $ts->getRowDimension($r)->setRowHeight(25);
+                foreach ($columns as $ci => $_) {
+                    $colLetter = Coordinate::stringFromColumnIndex($ci + 1);
+                    $ts->getStyle("{$colLetter}{$r}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FFD0CAEE');
+                }
             }
         }
 
-        $absolute = $this->ensurePath($relPath);
+        $ss->setActiveSheetIndex(1);
 
-        return $w->save($absolute);
+        $absolute = $this->ensurePath($relPath);
+        (new XlsxExporter($ss))->save($absolute);
+
+        return $absolute;
     }
 
     // ── XLSX helpers ──────────────────────────────────────────────────────────
 
-    /** Split long text into chunks that fit in a cell. */
-    private function chunkText(string $text, int $maxLen = 500): array
+    /** Apply dark header style (brand bg, white bold text, centered). */
+    private function styleHeader(mixed $sheet, string $range): void
     {
-        $text = trim($text);
-        if ($text === '') {
-            return [''];
-        }
+        $sheet->getStyle($range)->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF'], 'size' => 11],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1A0D33']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF6C3CE1']]],
+        ]);
+    }
 
-        $paragraphs = preg_split("/\n\s*\n/", $text) ?: [$text];
-        $chunks = [];
-        $current = '';
-
-        foreach ($paragraphs as $para) {
-            $para = trim($para);
-            if ($para === '') {
-                continue;
-            }
-
-            if (strlen($current) + strlen($para) > $maxLen && $current !== '') {
-                $chunks[] = trim($current);
-                $current = $para;
-            } else {
-                $current .= ($current ? "\n\n" : '').$para;
-            }
-        }
-
-        if (trim($current) !== '') {
-            $chunks[] = trim($current);
-        }
-
-        return $chunks ?: [''];
+    /** Apply bold style. */
+    private function styleBold(mixed $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->getFont()->setBold(true);
+        $sheet->getStyle($range)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFF5F4FF');
     }
 
     /** Parse numbered items from text like "1. Title\n..." */
@@ -560,7 +700,7 @@ class ExportService
                 $items[] = ['title' => trim($lines[0]), 'body' => trim($lines[1] ?? '')];
             }
         } else {
-            foreach ($this->chunkText($text, 300) as $chunk) {
+            foreach (array_filter(array_map('trim', preg_split('/\n{2,}/', $text) ?: [])) as $chunk) {
                 $items[] = ['title' => '—', 'body' => $chunk];
             }
         }
@@ -569,13 +709,12 @@ class ExportService
     }
 
     /**
-     * Try to parse calendar post entries from Month sections.
+     * Parse calendar post entries from Month sections.
      * Returns array keyed by day number.
      */
     private function parseCalendarEntries(array $sections): array
     {
         $entries = [];
-        $dayOffset = 0;
 
         foreach ($sections as $section) {
             if (! preg_match('/^Month\s+(\d+)/i', $section['title'] ?? '', $m)) {
@@ -584,10 +723,7 @@ class ExportService
 
             $monthNum = (int) $m[1];
             $dayOffset = ($monthNum - 1) * 30;
-            $body = $section['body'] ?? '';
-
-            // Try to match lines like "Day N |..." or "Day N:" or numbered lists
-            $lines = explode("\n", $body);
+            $lines = explode("\n", $section['body'] ?? '');
             $localDay = 0;
 
             foreach ($lines as $line) {
@@ -596,13 +732,11 @@ class ExportService
                     continue;
                 }
 
-                // Pattern: "Day X" or "Day X:"
                 if (preg_match('/^Day\s+(\d+)[:\|]?\s*/i', $line, $dm)) {
                     $localDay = (int) $dm[1];
                     $rest = trim(substr($line, strlen($dm[0])));
                     $day = $dayOffset + $localDay;
                     if ($day >= 1 && $day <= 90) {
-                        // Try to parse pipe-separated fields
                         $parts = array_map('trim', explode('|', $rest));
                         $entries[$day] = [
                             'platform' => $parts[0] ?? '',
@@ -617,7 +751,6 @@ class ExportService
                         ];
                     }
                 } elseif ($localDay > 0 && isset($entries[$dayOffset + $localDay])) {
-                    // Append to topic of current day
                     $entries[$dayOffset + $localDay]['topic'] .= ' '.$line;
                 }
             }
