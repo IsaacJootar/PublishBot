@@ -356,9 +356,9 @@
                 <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:1rem;">
                     <label class="pai-label">Write in voice</label>
                     <select name="voice_profile_id" class="pai-input" style="cursor:pointer;">
-                        <option value="" {{ $defaultVoiceId ? '' : 'selected' }}>— No voice profile —</option>
+                        <option value="" selected>— No voice profile —</option>
                         @foreach($voices as $v)
-                            <option value="{{ $v->id }}" {{ $defaultVoiceId === $v->id ? 'selected' : '' }}>
+                            <option value="{{ $v->id }}">
                                 {{ $v->emoji }} {{ $v->name }} {{ $v->is_default ? '(default)' : '' }}{{ $v->extracted_style ? '' : ' — untrained' }}
                             </option>
                         @endforeach
