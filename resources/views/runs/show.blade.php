@@ -25,6 +25,12 @@
                 @endif
             </div>
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                @if(in_array($run->status, ['running','pending']))
+                <form method="POST" action="{{ route('runs.cancel', $run) }}" onsubmit="return confirm('Cancel this run?')">
+                    @csrf
+                    <button type="submit" style="background:#FFF1F2;border:1px solid #FECDD3;color:#BE123C;border-radius:10px;font-size:0.8rem;font-weight:600;padding:0.5rem 0.875rem;cursor:pointer;">✕ Cancel run</button>
+                </form>
+                @endif
                 <form method="POST" action="{{ route('runs.rerun', $run) }}">
                     @csrf
                     <button type="submit" class="btn-ghost" style="font-size:0.8rem;padding:0.5rem 0.875rem;">↺ Re-run</button>
@@ -35,6 +41,18 @@
                 </form>
             </div>
         </div>
+
+        {{-- Running banner --}}
+        @if(in_array($run->status, ['running','pending']))
+        <div id="running-banner" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.85rem;">
+            <div style="width:22px;height:22px;border:2.5px solid #3B82F6;border-right-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
+            <div style="flex:1;">
+                <p style="margin:0;font-size:0.88rem;font-weight:700;color:#1D4ED8;">Pipeline running</p>
+                <p id="run-progress-note" style="margin:0.15rem 0 0;font-size:0.78rem;color:#3B82F6;">{{ $run->stages->last()?->progress_note ?? 'Processing...' }}</p>
+            </div>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        @endif
 
         {{-- Stage cards --}}
         <div id="stages-container" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;">
@@ -237,6 +255,20 @@
             .then(r => r.json())
             .then(data => {
                 renderStages(data.stages);
+
+                // Update running banner progress note
+                const progressNote = document.getElementById('run-progress-note');
+                if (progressNote) {
+                    const running = data.stages.find(s => s.status === 'running');
+                    if (running && running.progress_note) {
+                        progressNote.textContent = running.progress_note;
+                    }
+                }
+                // Hide banner if no longer running
+                if (!['running','pending'].includes(data.status)) {
+                    const banner = document.getElementById('running-banner');
+                    if (banner) banner.style.display = 'none';
+                }
 
                 // Show validation panel
                 if (data.validation_report) {

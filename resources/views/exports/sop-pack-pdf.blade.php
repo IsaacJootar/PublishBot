@@ -111,6 +111,11 @@
     <span class="sop-num-badge">SOP {{ $i + 1 }} of {{ count($sops) }}</span>
     <h2>{{ $sop['title'] }}</h2>
 
+    {{-- If Claude used structured labels, show them. Otherwise render raw body. --}}
+    @if(!empty($sop['raw_body']))
+    <div style="line-height:1.65;white-space:pre-wrap;font-size:11pt;color:#333;">{{ $sop['raw_body'] }}</div>
+    @else
+
     @if(! empty($sop['purpose']))
     <p class="field-label">Purpose</p>
     <p class="field-value">{{ $sop['purpose'] }}</p>
@@ -133,6 +138,7 @@
         <li>{{ $step }}</li>
         @endforeach
     </ol>
+    @endif
     @endif
 
     @if(! empty($sop['mistakes']))

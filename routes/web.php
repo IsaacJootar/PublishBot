@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/runs/{pipelineRun}/retry/{stageNumber}', [RunController::class, 'retry'])->name('runs.retry');
     Route::post('/runs/{pipelineRun}/rerun', [RunController::class, 'rerun'])->name('runs.rerun');
     Route::delete('/runs/{pipelineRun}', [RunController::class, 'destroy'])->name('runs.destroy');
+    Route::post('/runs/{pipelineRun}/cancel', [RunController::class, 'cancel'])->name('runs.cancel');
     Route::get('/runs/{pipelineRun}/files/{filename}', [RunController::class, 'file'])->name('runs.file');
     Route::get('/runs/{pipelineRun}/export/{format}', [RunController::class, 'exportEbook'])->name('runs.export');
 
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{pipelineRun}/listing', [ConvertDraftController::class, 'listing'])->name('listing');
         Route::get('/{pipelineRun}/launch', [ConvertDraftController::class, 'launch'])->name('launch');
         Route::get('/{pipelineRun}/export/{format}', [ConvertDraftController::class, 'export'])->name('export');
+        Route::post('/{pipelineRun}/reclean', [ConvertDraftController::class, 'reclean'])->name('reclean');
     });
 
     // My Series

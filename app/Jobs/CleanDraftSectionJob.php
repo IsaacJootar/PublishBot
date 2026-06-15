@@ -10,7 +10,9 @@ use Throwable;
 
 /**
  * Cleans one section of an uploaded draft via Claude.
- * Dispatched once per section; final job assembles cleaned_content.
+ * Sections are stored keyed by index to prevent race-condition overwrites
+ * when multiple jobs run in parallel. Final assembly happens when all
+ * sections are present.
  */
 class CleanDraftSectionJob implements ShouldQueue
 {
@@ -40,45 +42,54 @@ class CleanDraftSectionJob implements ShouldQueue
         $settings = $run->user->getSettings();
         $claude = new ClaudeService($settings);
 
-        $system = <<<'TXT'
-You are a professional manuscript editor. Your job is to clean and polish
-an uploaded draft without changing the author's voice, ideas, or meaning.
-
-Do:
-- Fix grammar, spelling, and punctuation errors
-- Improve sentence flow where it is genuinely broken
-- Remove duplicate blank lines or excessive whitespace
-- Preserve every paragraph break the author wrote
-- Keep all headings exactly as the author wrote them
-- Return the cleaned text only — no preamble, no commentary
-
-Do NOT:
-- Add new content the author did not write
-- Remove ideas, arguments, or paragraphs
-- Change the author's word choices unnecessarily
-- Rewrite in a different style
-TXT;
+        $system = 'You are a professional manuscript editor. Your job is to clean and polish '
+            ."an uploaded draft without changing the author's voice, ideas, or meaning.\n\n"
+            ."Do:\n- Fix grammar, spelling, and punctuation errors\n"
+            ."- Improve sentence flow where it is genuinely broken\n"
+            ."- Remove duplicate blank lines or excessive whitespace\n"
+            ."- Preserve every paragraph break the author wrote\n"
+            ."- Keep all headings exactly as the author wrote them\n"
+            ."- Return the cleaned text only — no preamble, no commentary\n\n"
+            ."Do NOT:\n- Add new content the author did not write\n"
+            ."- Remove ideas, arguments, or paragraphs\n"
+            ."- Change the author's word choices unnecessarily\n"
+            .'- Rewrite in a different style';
 
         $user = "Clean this section of the manuscript:\n\n".$this->sectionText."\n\nReturn only the cleaned text.";
 
         try {
             $cleaned = $claude->complete($system, $user);
         } catch (Throwable $e) {
-            // Fall back to original text on error — do not fail the whole run
+            // Fall back to original text — never block the whole run
             $cleaned = $this->sectionText;
         }
 
-        // Append this section to cleaned_content atomically
+        // Store each section keyed by index to avoid race-condition overwrites.
+        // We use a JSON map {sectionIndex: cleanedText} until all sections arrive.
         $run->refresh();
         $existing = $run->cleaned_content ?? '';
-        $separator = $existing ? "\n\n" : '';
-        $run->update(['cleaned_content' => $existing.$separator.$cleaned]);
 
-        // If this is the last section, mark as ready for review
-        if ($this->sectionIndex + 1 >= $this->totalSections) {
+        $store = json_decode($existing, true);
+        if (! is_array($store)) {
+            // First section or legacy plain-text — start fresh map
+            $store = [];
+        }
+
+        $store[$this->sectionIndex] = $cleaned;
+
+        // Assemble into final plain text when all sections are collected
+        if (count($store) >= $this->totalSections) {
+            ksort($store);
+            $assembled = implode("\n\n", $store);
             $run->update([
+                'cleaned_content' => $assembled,
                 'status' => 'paused',
                 'progress_note' => 'Cleaning complete — review and approve below.',
+            ]);
+        } else {
+            $run->update([
+                'cleaned_content' => json_encode($store),
+                'progress_note' => "Cleaned {$n} of {$this->totalSections} sections...",
             ]);
         }
     }

@@ -219,6 +219,19 @@ class RunController extends Controller
             ->with('toast', ['message' => 'Run deleted.', 'type' => 'success']);
     }
 
+    public function cancel(PipelineRun $pipelineRun): RedirectResponse
+    {
+        $this->authorise($pipelineRun);
+
+        $pipelineRun->update([
+            'status' => 'failed',
+            'error_message' => 'Cancelled by user.',
+            'progress_note' => null,
+        ]);
+
+        return back()->with('toast', ['message' => 'Run cancelled.', 'type' => 'success']);
+    }
+
     private function authorise(PipelineRun $run): void
     {
         abort_if($run->user_id !== auth()->id(), 403);

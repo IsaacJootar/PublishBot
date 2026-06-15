@@ -131,7 +131,11 @@
         @endif
     </div>
 
-    <style>@media(max-width:640px){[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}}</style>
+    <style>
+    @media(max-width:640px){[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}}
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes progress { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+    </style>
 
     {{-- Recent runs --}}
     @if($recent->isNotEmpty())
@@ -143,27 +147,51 @@
         <div style="display:flex;flex-direction:column;gap:0.5rem;">
             @foreach($recent as $run)
             @php
+                $isRunning = in_array($run->status, ['pending','running']);
                 $statusStyles = [
-                    'pending'   => ['bg'=>'#F5F4FF','color'=>'#5A2EC9','label'=>'Pending'],
-                    'running'   => ['bg'=>'#EFF6FF','color'=>'#1D4ED8','label'=>'Running'],
-                    'paused'    => ['bg'=>'#FFFBEB','color'=>'#92400E','label'=>'Review needed'],
-                    'completed' => ['bg'=>'#ECFDF5','color'=>'#065F46','label'=>'Completed'],
-                    'failed'    => ['bg'=>'#FFF1F2','color'=>'#BE123C','label'=>'Failed'],
+                    'pending'   => ['bg'=>'#EFF6FF','color'=>'#1D4ED8','label'=>'⏳ Starting...'],
+                    'running'   => ['bg'=>'#EFF6FF','color'=>'#1D4ED8','label'=>'⚡ Running'],
+                    'paused'    => ['bg'=>'#FFFBEB','color'=>'#92400E','label'=>'👀 Review needed'],
+                    'completed' => ['bg'=>'#ECFDF5','color'=>'#065F46','label'=>'✓ Completed'],
+                    'failed'    => ['bg'=>'#FFF1F2','color'=>'#BE123C','label'=>'✗ Failed'],
                 ];
                 $st = $statusStyles[$run->status] ?? $statusStyles['pending'];
             @endphp
-            <a href="{{ route('runs.show', $run) }}"
-               style="display:flex;align-items:center;gap:0.875rem;padding:0.75rem;background:#F5F4FF;border-radius:10px;text-decoration:none;transition:background 0.15s;"
-               onmouseover="this.style.background='#EDE9FF'" onmouseout="this.style.background='#F5F4FF'">
-                <div style="width:36px;height:36px;background:linear-gradient(135deg,#1C1308,#0E0B04);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <div style="background:#F5F4FF;border-radius:10px;overflow:hidden;">
+                <a href="{{ route('runs.show', $run) }}"
+                   style="display:flex;align-items:center;gap:0.875rem;padding:0.75rem;text-decoration:none;transition:background 0.15s;"
+                   onmouseover="this.style.background='rgba(0,0,0,0.03)'" onmouseout="this.style.background='transparent'">
+                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#1C1308,#0E0B04);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        @if($isRunning)
+                        <div style="width:14px;height:14px;border:2px solid #F59E0B;border-right-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                        @else
+                        <svg width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        @endif
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <p style="font-size:0.85rem;font-weight:700;color:#0F0A1E;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $run->topic }}</p>
+                        <p style="font-size:0.73rem;color:#9B93B0;margin:0.15rem 0 0;">
+                            {{ $run->created_at->diffForHumans() }}
+                            @if($isRunning && $run->progress_note)
+                            · <span style="color:#1D4ED8;font-weight:600;">{{ $run->progress_note }}</span>
+                            @endif
+                        </p>
+                    </div>
+                    <span style="background:{{ $st['bg'] }};color:{{ $st['color'] }};border-radius:999px;padding:3px 10px;font-size:0.72rem;font-weight:600;white-space:nowrap;flex-shrink:0;">{{ $st['label'] }}</span>
+                </a>
+                @if($isRunning)
+                {{-- Cancel button for stuck runs --}}
+                <div style="padding:0 0.75rem 0.6rem;display:flex;align-items:center;gap:0.5rem;">
+                    <div style="height:3px;flex:1;background:#E4E0F0;border-radius:2px;overflow:hidden;">
+                        <div style="height:100%;width:60%;background:linear-gradient(90deg,#6C3CE1,#A78BFA);animation:progress 2s ease-in-out infinite;border-radius:2px;"></div>
+                    </div>
+                    <form method="POST" action="{{ route('runs.cancel', $run) }}" onsubmit="return confirm('Cancel this run?');">
+                        @csrf
+                        <button type="submit" style="background:none;border:none;font-size:0.7rem;color:#BE123C;font-weight:600;cursor:pointer;padding:0 0.25rem;">✕ Cancel</button>
+                    </form>
                 </div>
-                <div style="flex:1;min-width:0;">
-                    <p style="font-size:0.85rem;font-weight:700;color:#0F0A1E;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $run->topic }}</p>
-                    <p style="font-size:0.73rem;color:#9B93B0;margin:0.15rem 0 0;">{{ $run->created_at->diffForHumans() }}</p>
-                </div>
-                <span style="background:{{ $st['bg'] }};color:{{ $st['color'] }};border-radius:999px;padding:3px 10px;font-size:0.72rem;font-weight:600;white-space:nowrap;flex-shrink:0;">{{ $st['label'] }}</span>
-            </a>
+                @endif
+            </div>
             @endforeach
         </div>
     </div>

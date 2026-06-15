@@ -165,6 +165,34 @@ class ConvertDraftController extends Controller
         return view('convert.review', ['run' => $pipelineRun]);
     }
 
+    public function reclean(PipelineRun $pipelineRun): RedirectResponse
+    {
+        $this->authorise($pipelineRun);
+
+        // Reset cleaned content and restart cleaning jobs
+        $content = $pipelineRun->raw_uploaded_content;
+        if (! $content) {
+            return back()->with('toast', ['message' => 'No content to clean.', 'type' => 'warning']);
+        }
+
+        $pipelineRun->update([
+            'cleaned_content' => null,
+            'cleaning_approved' => false,
+            'status' => 'running',
+            'progress_note' => 'Restarting cleaning...',
+        ]);
+
+        $sections = $this->splitIntoSections($content);
+        $total = count($sections);
+        foreach ($sections as $i => $section) {
+            CleanDraftSectionJob::dispatch($pipelineRun->id, $i, $total, $section)
+                ->delay(now()->addSeconds($i * 2));
+        }
+
+        return redirect()->route('convert.review', $pipelineRun)
+            ->with('toast', ['message' => "Cleaning restarted — {$total} sections queued. Make sure queue:work is running.", 'type' => 'success']);
+    }
+
     public function status(PipelineRun $pipelineRun): JsonResponse
     {
         $this->authorise($pipelineRun);

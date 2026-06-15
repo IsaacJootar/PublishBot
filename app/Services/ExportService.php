@@ -114,7 +114,7 @@ class ExportService
         return $cats;
     }
 
-    /** @return array<int, array{title:string, purpose:string, when_to_use:string, need_before:string, steps:array<int,string>, mistakes:array<int,string>, notes:string}> */
+    /** @return array<int, array{title:string, purpose:string, when_to_use:string, need_before:string, steps:array<int,string>, mistakes:array<int,string>, notes:string, raw_body:string}> */
     private function parseSops(array $sections): array
     {
         $sops = [];
@@ -123,17 +123,20 @@ class ExportService
             // Strip leading "SOP: Title" header if present
             $body = preg_replace('/^SOP:\s*.+\n/m', '', $body, 1);
 
+            $purpose = $this->grabField($body, 'PURPOSE');
             $steps = $this->grabList($body, 'STEPS', '/^\s*\d+\.\s+/');
             $mistakes = $this->grabList($body, 'COMMON MISTAKES TO AVOID', '/^\s*-\s+/');
 
             $sops[] = [
                 'title' => $section['title'] ?? 'SOP',
-                'purpose' => $this->grabField($body, 'PURPOSE'),
+                'purpose' => $purpose,
                 'when_to_use' => $this->grabField($body, 'WHEN TO USE(?: THIS SOP)?'),
                 'need_before' => $this->grabField($body, 'WHAT YOU NEED BEFORE STARTING'),
                 'steps' => $steps,
                 'mistakes' => $mistakes,
                 'notes' => $this->grabField($body, 'NOTES'),
+                // Fallback: raw body rendered when specific labels not found
+                'raw_body' => (! $purpose && empty($steps)) ? $body : '',
             ];
         }
 
@@ -300,9 +303,11 @@ class ExportService
         $section->addText('by '.$author, ['name' => 'Calibri', 'size' => 14, 'color' => '333333'], ['alignment' => Jc::CENTER, 'spaceBefore' => 720]);
         $section->addPageBreak();
 
-        // TOC
-        $section->addText('Contents', ['name' => 'Calibri', 'size' => 22, 'bold' => true, 'color' => $brandColor], ['spaceAfter' => 360]);
-        $section->addTOC(['name' => 'Calibri', 'size' => 12]);
+        // Contents list (manual — PhpWord's addTOC generates broken DOCX on many Word versions)
+        $section->addText('Contents', ['name' => 'Calibri', 'size' => 22, 'bold' => true, 'color' => $brandColor], ['spaceAfter' => 240]);
+        foreach ($chapters as $i => $chapter) {
+            $section->addText(($i + 1).'. '.($chapter['title'] ?? ''), ['name' => 'Calibri', 'size' => 12, 'color' => $brandColor], ['spaceAfter' => 120]);
+        }
         $section->addPageBreak();
 
         // Chapters
