@@ -305,14 +305,23 @@ class ContentJob implements ShouldQueue
     private function writeWebsiteCopyPack(DigitalProduct $p, array $structure, ClaudeService $claude, string $voice): void
     {
         $opts = $p->brief_options ?? [];
-        $businessName = $opts['business_name'] ?? $p->niche;
-        $tone = $opts['tone'] ?? 'Friendly and warm';
-        $differentiator = $opts['differentiator'] ?? '';
-        $businessLocation = $opts['business_location'] ?? '';
+        $tone = $opts['tone'] ?? 'Professional';
         $pages = $structure['pages'] ?? ['Home', 'About', 'Contact & SEO'];
         $research = $p->research_output ?? [];
+        $placeholders = $structure['placeholder_guide'] ?? [
+            'business_name' => '[YOUR BUSINESS NAME]',
+            'service' => '[YOUR SERVICE NAME]',
+            'tagline' => '[YOUR TAGLINE]',
+            'cta' => '[YOUR CTA TEXT]',
+            'testimonial' => '[ADD YOUR TESTIMONIAL HERE]',
+        ];
 
-        $system = "You are a professional website copywriter writing for {$businessName}. "
+        $system = 'You are a professional website copywriter creating a niche website copy template pack for '.$p->niche.'. '
+            .'This is a template bought by many people in this niche — NOT written for one specific business. '
+            .'Use '.($placeholders['business_name'] ?? '[YOUR BUSINESS NAME]').' wherever the business name goes. '
+            .'Use '.($placeholders['service'] ?? '[YOUR SERVICE NAME]').' wherever a service name goes. '
+            .'Use '.($placeholders['testimonial'] ?? '[ADD YOUR TESTIMONIAL HERE]').' for testimonials. '
+            .'Every [BRACKET] is a clear instruction to the buyer about what to fill in. '
             ."Tone: {$tone}. Write copy that converts browsers into buyers.{$voice}";
 
         $sections = [];
@@ -341,39 +350,49 @@ class ContentJob implements ShouldQueue
         foreach ($pages as $i => $page) {
             $p->update(['progress_note' => 'Writing page '.($i + 1)." of {$total}: {$page}..."]);
 
+            $nicheContext = "Niche: {$p->niche}\nTypical buyer: {$p->buyer_description}\n"
+                ."Their biggest problem: {$p->buyer_problem}\nTone: {$tone}\n"
+                .'Primary message: '.($research['primary_message'] ?? '')."\n"
+                ."REMINDER: Use [YOUR BUSINESS NAME], [YOUR SERVICE NAME], [YOUR TAGLINE], [YOUR CTA TEXT], [ADD YOUR TESTIMONIAL HERE] as placeholders.\n\n";
+
             if (str_contains(strtolower($page), 'home')) {
-                $pageUser = "Business name: {$businessName}\nWhat they do: {$p->niche}\n"
-                    ."Ideal customer: {$p->buyer_description}\nDifferentiator: {$differentiator}\n"
-                    ."Top problems solved: {$p->buyer_problem}\nTone: {$tone}\n"
-                    .'Primary message: '.($research['primary_message'] ?? '')."\n\n"
-                    .'Write the complete home page copy. Include: hero (headline, subheadline, 2 CTAs), '
-                    .'social proof bar, problem section (3 pain points), solution section (3 benefits), '
-                    ."how it works (3 steps), testimonials placeholder, final CTA.\n"
+                $pageUser = $nicheContext
+                    .'Write the complete home page copy for a '.$p->niche.' professional. '
+                    .'Include: hero (headline with [YOUR BUSINESS NAME], subheadline, 2 CTAs using [YOUR CTA TEXT]), '
+                    .'social proof bar (3 stats with [YOUR NUMBER] placeholders), '
+                    .'problem section (3 pain points specific to '.$p->niche.'), '
+                    .'solution section (3 benefits), how it works (3 steps), '
+                    .'testimonials section ([ADD YOUR TESTIMONIAL HERE] × 3), final CTA. '
                     .'Format each section clearly with labels. No preamble.';
             } elseif (str_contains(strtolower($page), 'about')) {
-                $pageUser = "Business/founder: {$businessName}\nWhat they do: {$p->niche}\n"
-                    .'Values: '.($opts['core_values'] ?? 'not specified')."\nTone: {$tone}\n\n"
-                    .'Write the complete about page copy. Include: opening hook, founder story (3-4 paragraphs), '
-                    ."mission statement, 3 values with descriptions, why choose us section, closing CTA.\n"
+                $pageUser = $nicheContext
+                    .'Write the complete about page copy for a '.$p->niche.' professional. '
+                    .'Use [YOUR NAME] for the founder name. '
+                    .'Include: opening hook (speaks to the niche), story structure (3-4 paragraphs using [YOUR NAME] and [YOUR SPECIFIC STORY]), '
+                    .'mission statement template with [YOUR MISSION], 3 core values with descriptions, '
+                    .'why choose us section, closing CTA. '
                     .'Format each section clearly with labels. No preamble.';
             } elseif (str_contains(strtolower($page), 'contact') || str_contains(strtolower($page), 'seo')) {
-                $pageUser = "Business name: {$businessName}\nWhat they do: {$p->niche}\n"
-                    ."Location: {$businessLocation}\nTone: {$tone}\n\n"
-                    .'Write: 1) Contact page copy (headline, intro, form labels, confirmation message) '
-                    .'2) Meta copy for all pages (title + description under 60/160 chars each) '
-                    .'3) Social media bios (Instagram 150 chars, LinkedIn headline 220 chars, LinkedIn about, '
-                    .'Twitter 160 chars, Facebook 255 chars, Google Business 750 chars) '
-                    ."4) 10 tagline options with recommended one.\n"
+                $pageUser = $nicheContext
+                    .'Write: 1) Contact page copy for a '.$p->niche.' professional '
+                    .'(headline, intro using [YOUR BUSINESS NAME], form labels, confirmation message) '
+                    .'2) Meta copy templates for all pages (title + description under 60/160 chars — use [YOUR BUSINESS NAME] and [YOUR SERVICE NAME]) '
+                    .'3) Social media bio templates for all platforms (Instagram 150 chars, LinkedIn headline 220 chars, '
+                    .'LinkedIn about section, Twitter 160 chars, Facebook 255 chars, Google Business 750 chars — '
+                    .'use [YOUR NAME] and [YOUR BUSINESS NAME] throughout) '
+                    .'4) 10 tagline options for this niche with recommended one. '
                     .'Format each section clearly. No preamble.';
             } else {
                 // Service page
-                $pageUser = "Business name: {$businessName}\nService name: {$page}\n"
-                    ."Ideal customer: {$p->buyer_description}\nTone: {$tone}\n"
-                    ."Problems solved: {$p->buyer_problem}\nDifferentiator: {$differentiator}\n\n"
-                    .'Write the complete service page copy. Include: hero headline + subheadline, '
-                    ."3-4 paragraph description, 5 what's included items with descriptions, "
+                $pageUser = $nicheContext
+                    ."Service type: {$page}\n\n"
+                    .'Write the complete service page copy for a '.$p->niche.' offering '.$page.'. '
+                    .'Use [YOUR SERVICE NAME] for the service name, [YOUR PRICE] for pricing, [YOUR CTA TEXT] for buttons. '
+                    .'Include: hero headline + subheadline, '
+                    ."3-4 paragraph description, 5 what's included items (use [YOUR DELIVERABLE] where needed), "
                     ."who it's for (3 bullets), who it's not for, how it works (3 steps), "
-                    ."3 FAQs, and CTA section.\nFormat each section clearly. No preamble.";
+                    ."3 FAQs common in {$p->niche}, CTA section. "
+                    .'Format each section clearly. No preamble.';
             }
 
             $pageText = $claude->complete($system, $pageUser);
@@ -386,18 +405,23 @@ class ContentJob implements ShouldQueue
     private function writeBrandMessaging(DigitalProduct $p, array $structure, ClaudeService $claude, string $voice): void
     {
         $opts = $p->brief_options ?? [];
-        $businessName = $opts['business_name'] ?? $p->niche;
-        $founderName = $opts['founder_name'] ?? $businessName;
+        $tone = $opts['tone'] ?? 'Professional';
         $differentiator = $opts['differentiator'] ?? '';
-        $coreValues = $opts['core_values'] ?? '';
-        $personality = $opts['personality_words'] ?? '';
-        $avoidSounding = $opts['avoid_sounding_like'] ?? '';
         $pricePoint = $opts['price_point'] ?? '';
         $research = $p->research_output ?? [];
         $archetype = $research['brand_archetype'] ?? '';
+        $placeholders = $structure['placeholder_guide'] ?? [
+            'name' => '[YOUR NAME]',
+            'business' => '[YOUR BUSINESS NAME]',
+            'example' => '[YOUR SPECIFIC EXAMPLE]',
+        ];
 
-        $system = "You are a senior brand strategist writing a complete brand messaging system for {$businessName}. "
-            ."Be specific, distinctive — not generic brand-speak.{$voice}";
+        $system = 'You are a senior brand strategist creating a niche brand messaging template system for '.$p->niche.'. '
+            .'This is bought by many practitioners in this niche — NOT written for one specific person. '
+            .'Use '.($placeholders['name'] ?? '[YOUR NAME]').' wherever a personal name goes. '
+            .'Use '.($placeholders['business'] ?? '[YOUR BUSINESS NAME]').' wherever a business name goes. '
+            .'Use '.($placeholders['example'] ?? '[YOUR SPECIFIC EXAMPLE]').' for personal examples. '
+            ."Every [BRACKET] is a clear instruction to the buyer about what to personalise. Tone: {$tone}.{$voice}";
 
         $sections = [];
 
@@ -432,76 +456,77 @@ class ContentJob implements ShouldQueue
                     break;
 
                 case 'foundation':
-                    $user = "Business: {$businessName}\nFounder: {$founderName}\nWhat they do: {$p->niche}\n"
-                        ."Who they help: {$p->buyer_description}\nProblem solved: {$p->buyer_problem}\n"
-                        ."Differentiator: {$differentiator}\nValues: {$coreValues}\n"
-                        ."Brand archetype: {$archetype}\n\n"
-                        ."Write the complete brand foundation. Include:\n"
-                        ."1. Positioning statement (For [target] who [need], [brand] is the [category] that [benefit] because [reason])\n"
-                        ."2. Mission statement (We [action] [who] so they can [outcome])\n"
-                        ."3. Vision statement (A world where [change this brand creates])\n"
-                        ."4. Brand promise (The one thing customers can always count on)\n"
-                        ."5. Core values (each with definition, what it looks like in practice, what it is NOT)\n\n"
-                        .'Be specific. No generic mission statements. No preamble.';
+                    $user = "Niche: {$p->niche}\nTypical buyer: {$p->buyer_description}\n"
+                        ."Their problem: {$p->buyer_problem}\nDifferentiator for top practitioners: {$differentiator}\n"
+                        ."Brand archetype for this niche: {$archetype}\nTone: {$tone}\n\n"
+                        ."Write the complete brand foundation TEMPLATE for {$p->niche} professionals.\n"
+                        ."Use [YOUR NAME] and [YOUR BUSINESS NAME] throughout.\n"
+                        ."Include:\n"
+                        ."1. Positioning statement template — fill-in-the-blank with [BRACKETS]\n"
+                        ."2. Mission statement template — fill-in-the-blank with [BRACKETS]\n"
+                        ."3. Vision statement template — fill-in-the-blank with [BRACKETS]\n"
+                        ."4. Brand promise — write 3 options for {$p->niche} practitioners to choose from\n"
+                        ."5. Core values — 5 values common in great {$p->niche} brands, each with definition and what it looks like in practice\n\n"
+                        .'Be specific to the niche. Avoid generic statements. '
+                        .'Every item must feel written for a '.$p->niche.' professional. No preamble.';
                     $text = $claude->complete($system, $user);
                     break;
 
                 case 'personas':
-                    $user = "Ideal customer: {$p->buyer_description}\nBusiness: {$p->niche}\nPrice point: {$pricePoint}\n\n"
-                        ."Create 3 detailed buyer personas. For each persona include:\n"
-                        ."- Name, age, location, job title, income\n"
-                        ."- Day in life (vivid paragraph)\n"
-                        ."- Goals and dream outcome\n"
-                        ."- Pain points and emotional impact\n"
-                        ."- What they tried before and why it failed\n"
-                        ."- Where they are online and what content they consume\n"
-                        ."- Buying triggers and blockers\n"
-                        ."- Exact language phrases (5 phrases they actually use)\n"
-                        ."- One persona quote that captures exactly how they feel\n\n"
-                        .'Make them feel like real people. No preamble.';
+                    $user = "Niche: {$p->niche}\nIdeal customer: {$p->buyer_description}\n"
+                        ."Their problem: {$p->buyer_problem}\nTypical price point: {$pricePoint}\n\n"
+                        ."Create 3 detailed buyer personas for {$p->niche} professionals to target. "
+                        .'These are the typical buyers of services/products in this niche. '
+                        .'For each persona include: name, age, location, job title, income, '
+                        .'day in life (vivid paragraph), goals and dream outcome, pain points, '
+                        .'what they tried before, where they are online, buying triggers and blockers, '
+                        ."5 exact phrases they use, one persona quote.\n\n"
+                        ."Make them feel like real recognisable people in {$p->niche}. No preamble.";
                     $text = $claude->complete($system, $user);
                     break;
 
                 case 'voice':
-                    $user = "Business: {$businessName}\nPersonality: {$personality}\n"
-                        ."What to avoid: {$avoidSounding}\nIdeal customer: {$p->buyer_description}\n"
-                        ."Brand archetype: {$archetype}\nPrice point: {$pricePoint}\n\n"
-                        ."Write the complete brand voice guide. Include:\n"
-                        ."1. Voice overview (2-3 sentences)\n"
-                        ."2. Tone attributes (4-5) — each with what it means, example ON, example OFF\n"
-                        ."3. Writing rules (5-7 specific rules with before/after examples)\n"
-                        ."4. Words to use (10) with why each fits the brand\n"
-                        ."5. Words to avoid (10) with why each conflicts\n"
-                        ."6. Sentence structure guidance\n"
-                        ."7. How to open and close content\n"
-                        ."8. Before/after rewrites (3 examples)\n\nNo preamble.";
+                    $user = "Niche: {$p->niche}\nIdeal customer: {$p->buyer_description}\n"
+                        ."Brand archetype for this niche: {$archetype}\nTone: {$tone}\n"
+                        ."Typical price point: {$pricePoint}\n\n"
+                        ."Write a brand voice guide template for {$p->niche} professionals. "
+                        ."Use [YOUR BUSINESS NAME] and [YOUR SPECIFIC EXAMPLE] throughout. Include:\n"
+                        ."1. Voice overview for this niche (2-3 sentences)\n"
+                        ."2. Tone attributes (4-5) suited to {$p->niche} — each with example ON and example OFF\n"
+                        ."3. Writing rules specific to {$p->niche} (5-7 with before/after examples)\n"
+                        ."4. Words that work in {$p->niche} (10) — with why each works\n"
+                        ."5. Words to avoid in {$p->niche} (10) — with why they hurt\n"
+                        ."6. How to open and close content in this niche\n"
+                        ."7. Before/after rewrites (3 examples — generic vs niche-specific)\n\nNo preamble.";
                     $text = $claude->complete($system, $user);
                     break;
 
                 case 'taglines':
-                    $user = "Business: {$businessName}\nWhat they do: {$p->niche}\n"
-                        ."Ideal customer: {$p->buyer_description}\nDifferentiator: {$differentiator}\n"
-                        ."Brand promise: see brand foundation\n\n"
-                        ."Generate:\n"
-                        ."1. 10 tagline options (outcome / problem / question / statement types) with reasoning\n"
-                        ."2. RECOMMENDED tagline with full explanation of why it wins\n"
-                        ."3. Elevator pitches: 10-second, 30-second, 2-minute, written/email version\n"
-                        ."4. Key messages: 1 primary + 3 supporting\n"
-                        ."5. Objection responses (5 common objections with honest, conversational responses)\n\nNo preamble.";
+                    $user = "Niche: {$p->niche}\nIdeal customer: {$p->buyer_description}\n"
+                        ."What makes the best practitioners different: {$differentiator}\nTone: {$tone}\n\n"
+                        ."Generate a tagline and messaging toolkit for {$p->niche} professionals. Include:\n"
+                        .'1. 10 tagline options (outcome / problem / question / statement types) with reasoning — '
+                        ."each should work for any {$p->niche} professional who fills in [YOUR BUSINESS NAME]\n"
+                        ."2. RECOMMENDED tagline with full explanation of why it wins for this niche\n"
+                        .'3. Elevator pitch templates: 10-second, 30-second, 2-minute, written/email — '
+                        ."use [YOUR NAME], [YOUR SPECIFIC RESULT] as placeholders\n"
+                        ."4. Key messages: 1 primary + 3 supporting (specific to {$p->niche})\n"
+                        ."5. Objection responses (5 common objections in {$p->niche} with honest, conversational responses)\n\nNo preamble.";
                     $text = $claude->complete($system, $user);
                     break;
 
                 case 'platform':
-                    $user = "Business: {$businessName}\nFounder: {$founderName}\nWhat they do: {$p->niche}\n"
-                        ."Tone: see voice guide\nIdeal customer: {$p->buyer_description}\n\n"
-                        ."Write:\n"
-                        .'1. Social media bios: Instagram (150 chars), LinkedIn headline (220 chars), '
+                    $user = "Niche: {$p->niche}\nIdeal customer: {$p->buyer_description}\nTone: {$tone}\n\n"
+                        ."Write platform copy and script templates for {$p->niche} professionals. "
+                        ."Use [YOUR NAME] and [YOUR BUSINESS NAME] throughout. Include:\n"
+                        .'1. Social media bio templates: Instagram (150 chars), LinkedIn headline (220 chars), '
                         .'LinkedIn About (full section), Twitter (160 chars), Facebook (255 chars), '
                         ."TikTok (80 chars), Pinterest (160 chars), Google Business (750 chars)\n"
-                        .'2. Scripts: networking introduction, discovery call opening, proposal intro, '
-                        ."testimonial request, referral request, cold outreach template, partnership pitch\n"
+                        ."2. Script templates for {$p->niche}: networking introduction, discovery call opening, "
+                        .'proposal intro, testimonial request, referral request, cold outreach, partnership pitch — '
+                        ."use [YOUR SPECIFIC RESULT] and [YOUR SPECIFIC OFFER] as placeholders\n"
                         .'3. Brand application guide: before-publishing checklist (5 items), '
-                        ."how to brief designers, how to onboard team/VA, quarterly review process\n\nNo preamble.";
+                        ."how to brief designers on your brand, how to onboard a VA or team member\n\nNo preamble.";
                     $text = $claude->complete($system, $user);
                     break;
 
@@ -529,8 +554,20 @@ class ContentJob implements ShouldQueue
         $leadMagnetType = $structure['lead_magnet_type'] ?? 'Checklist';
         $awarenessLevel = $structure['awareness_level'] ?? 'Problem aware';
 
-        $system = "You are an expert direct response copywriter writing a complete sales funnel for: {$p->niche}. "
-            ."Price point: {$pricePoint}. Tone: {$tone}.{$voice}";
+        $placeholders = $structure['placeholder_guide'] ?? [
+            'offer' => '[YOUR OFFER NAME]',
+            'price' => '[YOUR PRICE]',
+            'bonus' => '[YOUR BONUS NAME]',
+            'name' => '[YOUR NAME]',
+        ];
+
+        $system = 'You are an expert direct response copywriter creating a niche sales funnel template pack for '.$p->niche.'. '
+            .'This is bought by many people in this niche — NOT written for one specific offer. '
+            .'Use '.($placeholders['offer'] ?? '[YOUR OFFER NAME]').' wherever the offer name goes. '
+            .'Use '.($placeholders['price'] ?? '[YOUR PRICE]').' wherever pricing goes. '
+            .'Use '.($placeholders['bonus'] ?? '[YOUR BONUS NAME]').' wherever bonus names go. '
+            .'Use '.($placeholders['name'] ?? '[YOUR NAME]').' wherever a personal name goes. '
+            ."Every [BRACKET] is a clear instruction to the buyer about what to personalise. Tone: {$tone}.{$voice}";
 
         $sections = [];
 
@@ -570,22 +607,26 @@ class ContentJob implements ShouldQueue
 
             switch ($component['key']) {
                 case 'lead_magnet':
-                    $user = "Offer: {$p->niche}\nBuyer: {$p->buyer_description}\nProblem: {$p->buyer_problem}\n"
+                    $user = "Niche: {$p->niche}\nBuyer: {$p->buyer_description}\nProblem: {$p->buyer_problem}\n"
                         ."Lead magnet type: {$leadMagnetType}\nTone: {$tone}\n\n"
-                        ."Write the complete lead magnet copy. Include:\n"
-                        ."1. Title (irresistible — specific outcome)\n2. Subtitle (what it does in one sentence)\n"
-                        ."3. Description (2-3 sentences — what they get and why it matters)\n"
-                        ."4. 5 specific what's inside bullets\n5. CTA button text\n\nNo preamble.";
+                        ."Write a lead magnet copy template for a {$p->niche} offer. "
+                        ."Use [YOUR OFFER NAME] as the product name. Include:\n"
+                        ."1. Title template (use [YOUR RESULT] for the specific outcome)\n"
+                        ."2. Subtitle template\n3. Description (2-3 sentences)\n"
+                        ."4. 5 what's inside bullets (specific to {$p->niche})\n"
+                        ."5. CTA button text options\n\nNo preamble.";
                     break;
 
                 case 'landing_page':
-                    $user = "Offer: {$p->niche}\nBuyer: {$p->buyer_description}\nProblem: {$p->buyer_problem}\n"
+                    $user = "Niche: {$p->niche}\nBuyer: {$p->buyer_description}\nProblem: {$p->buyer_problem}\n"
                         ."Awareness level: {$awarenessLevel}\nTone: {$tone}\n\n"
-                        ."Write the complete landing page copy. Include:\n"
-                        ."1. Headline (outcome-focused, under 12 words)\n2. Subheadline (who it is for + what they get)\n"
-                        ."3. Social proof line (short credibility line)\n4. Body copy (3-4 paragraphs: problem → agitation → solution)\n"
-                        ."5. 3 what's included bullets with descriptions\n6. Form headline and CTA button text\n"
-                        ."7. Privacy note\n8. Thank you page (headline + what happens next)\n\nNo preamble.";
+                        ."Write a landing page copy template for a {$p->niche} offer. "
+                        ."Use [YOUR OFFER NAME], [YOUR NAME], [YOUR RESULT] as placeholders. Include:\n"
+                        ."1. Headline template (outcome-focused, under 12 words)\n"
+                        ."2. Subheadline template\n3. Social proof line template (use [YOUR NUMBER])\n"
+                        ."4. Body copy (3-4 paragraphs specific to {$p->niche}: problem → agitation → solution)\n"
+                        ."5. 3 what's included bullets\n6. Form headline and CTA options\n"
+                        ."7. Privacy note\n8. Thank you page template\n\nNo preamble.";
                     break;
 
                 case 'emails':
@@ -609,13 +650,15 @@ class ContentJob implements ShouldQueue
                             default => 'Day '.($e * 2 - 1),
                         };
 
-                        $emailUser = "Offer: {$p->niche}\nPrice: {$pricePoint}\nBuyer: {$p->buyer_description}\n"
+                        $emailUser = "Niche: {$p->niche}\nOffer price range: {$pricePoint}\nBuyer: {$p->buyer_description}\n"
                             ."Tone: {$tone}\nEmail {$e} of {$emailCount}\nSend timing: {$timing}\n"
                             ."Email goal: {$goal}\nPrevious emails covered: {$prevSummary}\n\n"
-                            ."Write Email {$e}. Include:\n"
-                            ."- Send timing: {$timing}\n- Subject line (specific, under 50 chars)\n"
-                            ."- Preview text (under 90 chars)\n- Full email body (real sentences, one clear job)\n"
-                            ."- CTA link text\n- Optional P.S. line\n\nNo preamble.";
+                            ."Write Email {$e} as a template for {$p->niche} practitioners. "
+                            ."Use [YOUR NAME], [YOUR OFFER NAME], [YOUR SPECIFIC STORY] as placeholders. Include:\n"
+                            ."- Send timing: {$timing}\n- Subject line template (under 50 chars)\n"
+                            ."- Preview text template (under 90 chars)\n"
+                            ."- Full email body (specific to {$p->niche}, one clear job, use [BRACKETS] for personal details)\n"
+                            ."- CTA text\n- Optional P.S.\n\nNo preamble.";
 
                         $emailText = $claude->complete($system, $emailUser);
                         $allEmails .= "EMAIL {$e} OF {$emailCount} — {$timing}\n".str_repeat('-', 40)."\n{$emailText}\n\n";
@@ -628,34 +671,34 @@ class ContentJob implements ShouldQueue
 
                 case 'sales_page':
                     $objections = json_encode($research['top_objections'] ?? []);
-                    $user = "Offer: {$p->niche}\nPrice: {$pricePoint}\nBuyer: {$p->buyer_description}\n"
-                        ."Problem: {$p->buyer_problem}\nTried before: {$triedBefore}\n"
-                        ."Differentiator: {$differentiator}\nTop objections: {$objections}\nTone: {$tone}\n\n"
-                        ."Write the complete long-form sales page. Include:\n"
-                        ."1. Headline (biggest promise)\n2. Subheadline (who this is for + transformation)\n"
-                        ."3. Opening story (3-5 paragraphs — the reader's story told back to them)\n"
-                        ."4. Problem section (headline + 3-4 paragraphs agitating the problem)\n"
-                        ."5. Solution introduction (headline + 2-3 paragraphs)\n"
-                        ."6. What's included (5 deliverables with values)\n"
-                        ."7. Who it's for / who it's not for\n"
-                        ."8. Testimonials placeholder\n"
-                        ."9. Objection handling (5 responses)\n"
-                        ."10. Guarantee / risk reversal\n"
-                        ."11. Pricing section with context\n"
-                        ."12. Final CTA\n"
-                        ."13. Confirmation email (subject + full body)\n\nNo preamble.";
+                    $user = "Niche: {$p->niche}\nOffer price range: {$pricePoint}\nBuyer: {$p->buyer_description}\n"
+                        ."Their problem: {$p->buyer_problem}\nWhat they try first: {$triedBefore}\n"
+                        ."What makes great offers different: {$differentiator}\nTop objections: {$objections}\nTone: {$tone}\n\n"
+                        ."Write a complete long-form sales page TEMPLATE for {$p->niche} practitioners. "
+                        ."Use [YOUR OFFER NAME], [YOUR PRICE], [YOUR BONUS NAME], [YOUR NAME], [ADD YOUR TESTIMONIAL HERE] throughout. Include:\n"
+                        ."1. Headline template (biggest promise for {$p->niche})\n"
+                        ."2. Subheadline template\n3. Opening story structure (use [YOUR STORY] — guide the buyer)\n"
+                        ."4. Problem section (3-4 paragraphs specific to {$p->niche})\n"
+                        ."5. Solution introduction ([YOUR OFFER NAME])\n"
+                        ."6. What's included (5 deliverables — use [YOUR DELIVERABLE] where needed)\n"
+                        ."7. Who it's for / who it's not for (specific to {$p->niche})\n"
+                        ."8. [ADD YOUR TESTIMONIAL HERE] × 3 placeholders with guidance on what to put\n"
+                        ."9. Objection handling (5 responses to common {$p->niche} objections)\n"
+                        ."10. Guarantee template\n11. Pricing section ([YOUR PRICE])\n"
+                        ."12. Final CTA\n13. Confirmation email template\n\nNo preamble.";
                     break;
 
                 case 'upsell':
-                    $user = "Main offer: {$p->niche}\nPrice: {$pricePoint}\nBuyer: {$p->buyer_description}\nTone: {$tone}\n\n"
-                        ."Write a complete upsell page for a complementary higher-ticket offer. Include:\n"
-                        ."1. Congratulations headline (they just bought)\n2. Upsell offer name and description\n"
-                        ."3. Why they need this now (3 reasons)\n4. What's included\n"
-                        ."5. Price and value justification\n6. One-time offer urgency\n7. Yes/No CTA buttons\n\nNo preamble.";
+                    $user = "Niche: {$p->niche}\nOffer price range: {$pricePoint}\nBuyer: {$p->buyer_description}\nTone: {$tone}\n\n"
+                        ."Write an upsell page TEMPLATE for a {$p->niche} complementary offer. "
+                        ."Use [YOUR UPSELL OFFER NAME], [YOUR UPSELL PRICE] as placeholders. Include:\n"
+                        ."1. Congratulations headline template\n2. Upsell offer description template\n"
+                        ."3. 3 reasons they need this now (specific to {$p->niche})\n4. What's included template\n"
+                        ."5. Price justification\n6. One-time offer urgency line\n7. Yes/No CTA buttons\n\nNo preamble.";
                     break;
 
                 default:
-                    $user = "Write content for: {$component['title']}\nOffer: {$p->niche}";
+                    $user = "Write content for: {$component['title']}\nNiche: {$p->niche}";
             }
 
             $text = $claude->complete($system, $user);

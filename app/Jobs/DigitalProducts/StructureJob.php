@@ -194,29 +194,29 @@ class StructureJob implements ShouldQueue
 
     private function websiteCopyPack(DigitalProduct $p, array $opts, array $research, string $titleHint, string $voice): array
     {
-        $businessName = $opts['business_name'] ?? $p->niche;
-        $tone = $opts['tone'] ?? 'Friendly and warm';
+        $tone = $opts['tone'] ?? 'Professional';
         $serviceCount = (int) ($opts['service_count'] ?? 2);
         $serviceNames = array_filter(array_map('trim', explode("\n", $opts['service_names'] ?? '')));
-        $serviceList = $serviceNames ?: array_fill(0, $serviceCount, 'Service Page');
+        $serviceList = $serviceNames ?: array_fill(0, $serviceCount, '[Service Name]');
         $primaryMessage = $research['primary_message'] ?? '';
-        $positioningStatement = $research['positioning_statement'] ?? '';
 
         $pages = array_merge(['Home', 'About'], array_slice($serviceList, 0, $serviceCount), ['Contact & SEO']);
         $pagesJson = json_encode($pages);
 
-        $system = 'You are a professional website copywriter who helps small businesses attract ideal clients. '
-            ."You write copy that converts browsers into buyers.{$voice}";
+        $system = 'You are a professional website copywriter creating a niche website copy template pack. '
+            .'This pack is bought by many people in the same niche — it uses [BRACKETS] for specific details buyers fill in. '
+            ."Tone: {$tone}.{$voice}";
 
-        $user = "Business: {$businessName}\nWhat they do: {$p->niche}\nIdeal customer: {$p->buyer_description}\n"
-            ."Tone: {$tone}\nPositioning: {$positioningStatement}\nPrimary message: {$primaryMessage}\n"
-            .'Differentiator: '.($opts['differentiator'] ?? '')."\n"
-            .'Location: '.($opts['business_location'] ?? 'Not specified')."\n{$titleHint}\n\n"
+        $user = "Niche: {$p->niche}\nTypical buyer: {$p->buyer_description}\n"
+            ."Their biggest problem: {$p->buyer_problem}\nTone: {$tone}\n"
+            ."Primary message: {$primaryMessage}\nService types in this niche: ".implode(', ', $serviceList)."\n{$titleHint}\n\n"
+            ."IMPORTANT: This is a niche template — use [YOUR BUSINESS NAME], [YOUR SERVICE NAME], [YOUR TAGLINE], [YOUR CTA TEXT], [ADD YOUR TESTIMONIAL HERE] throughout.\n\n"
             ."Design the website copy pack structure. Return JSON:\n"
-            .'{"product_title":"'.$businessName.' Website Copy Pack","tagline":"Every word for your website — ready to paste",'
+            .'{"product_title":"The '.$p->niche.' Website Copy Pack","tagline":"Every word for your website — customise and launch in one day",'
             .'"pages":'.$pagesJson.','
-            .'"tone_direction":"How to apply the '.$tone.' tone throughout",'
-            .'"key_messages":["Primary message","Supporting message 1","Supporting message 2"],'
+            .'"tone_direction":"How to apply the '.$tone.' tone throughout — with before/after examples",'
+            .'"key_messages":["Primary message for this niche","Supporting message 1","Supporting message 2"],'
+            .'"placeholder_guide":{"business_name":"[YOUR BUSINESS NAME]","service":"[YOUR SERVICE NAME]","tagline":"[YOUR TAGLINE]","cta":"[YOUR CTA TEXT]","testimonial":"[ADD YOUR TESTIMONIAL HERE]"},'
             .'"seo_keywords":["keyword 1","keyword 2","keyword 3","keyword 4","keyword 5"]}'
             ."\n\nReturn only the JSON.";
 
@@ -225,24 +225,27 @@ class StructureJob implements ShouldQueue
 
     private function brandMessaging(DigitalProduct $p, array $opts, array $research, string $titleHint, string $voice): array
     {
-        $businessName = $opts['business_name'] ?? $p->niche;
-        $founderName = $opts['founder_name'] ?? '';
+        $tone = $opts['tone'] ?? 'Professional';
         $differentiator = $opts['differentiator'] ?? '';
-        $personality = $opts['personality_words'] ?? '';
+        $pricePoint = $opts['price_point'] ?? '';
         $archetype = $research['brand_archetype'] ?? '';
         $whiteSpace = $research['white_space'] ?? '';
 
-        $system = "You are a senior brand strategist. You create brand messaging systems that replace agency briefs costing thousands.{$voice}";
+        $system = 'You are a senior brand strategist creating a niche brand messaging template system. '
+            .'This pack is bought by many practitioners in the same niche — it uses [BRACKETS] for specific details buyers fill in. '
+            ."Tone: {$tone}.{$voice}";
 
-        $user = "Brand: {$businessName}\nFounder: {$founderName}\nWhat they do: {$p->niche}\n"
-            ."Who they help: {$p->buyer_description}\nProblem solved: {$p->buyer_problem}\n"
-            ."Differentiator: {$differentiator}\nPersonality: {$personality}\n"
-            ."Brand archetype: {$archetype}\nWhite space opportunity: {$whiteSpace}\n{$titleHint}\n\n"
+        $user = "Niche: {$p->niche}\nTypical practitioner: {$p->buyer_description}\n"
+            ."Their problem: {$p->buyer_problem}\nWhat makes the best ones different: {$differentiator}\n"
+            ."Typical price point: {$pricePoint}\nBrand archetype for this niche: {$archetype}\n"
+            ."White space opportunity: {$whiteSpace}\nTone: {$tone}\n{$titleHint}\n\n"
+            ."IMPORTANT: Use [YOUR NAME], [YOUR BUSINESS NAME], [YOUR SPECIFIC EXAMPLE], [YOUR NICHE] as placeholders throughout.\n\n"
             ."Design the brand messaging system deliverables. Return JSON:\n"
-            .'{"product_title":"'.$businessName.' Brand Messaging System","tagline":"Your complete brand voice — from mission to tagline to scripts",'
+            .'{"product_title":"The '.$p->niche.' Brand Messaging System","tagline":"Your complete brand voice — from mission to tagline to scripts",'
             .'"deliverables":["Brand Foundation (mission, vision, promise, values)","3 Buyer Personas","Brand Voice Guide","10 Taglines + Recommendation","Elevator Pitches (10s, 30s, 2min)","Objection Responses","Platform Bios (all 7 platforms)","Conversion Scripts (7 scripts)","Brand Application Guide"],'
             .'"brand_archetype":"'.$archetype.'",'
-            .'"primary_tone":"Derived from personality: '.$personality.'"}'
+            .'"placeholder_guide":{"name":"[YOUR NAME]","business":"[YOUR BUSINESS NAME]","example":"[YOUR SPECIFIC EXAMPLE]"},'
+            .'"primary_tone":"'.$tone.'"}'
             ."\n\nReturn only the JSON.";
 
         return [$system, $user];
@@ -250,15 +253,15 @@ class StructureJob implements ShouldQueue
 
     private function salesFunnel(DigitalProduct $p, array $opts, array $research, string $titleHint, string $voice): array
     {
+        $tone = $opts['tone'] ?? 'Professional';
         $pricePoint = $opts['price_point'] ?? '';
-        $tone = $opts['tone'] ?? 'Friendly';
         $needsUpsell = $opts['needs_upsell'] ?? 'No';
         $needsWebinar = $opts['needs_webinar'] ?? 'No';
-        $funnel_length = $research['funnel_length'] ?? 'Medium (7 emails)';
+        $funnelLength = $research['funnel_length'] ?? 'Medium (7 emails)';
         $leadMagnetType = $research['best_lead_magnet_type'] ?? 'Checklist';
         $awarenessLevel = $research['awareness_level'] ?? 'Problem aware';
 
-        $emailCount = str_contains($funnel_length, '10') ? 10 : (str_contains($funnel_length, '5') ? 5 : 7);
+        $emailCount = str_contains($funnelLength, '10') ? 10 : (str_contains($funnelLength, '5') ? 5 : 7);
 
         $components = ['Lead Magnet ('.$leadMagnetType.')', 'Landing Page', "Email Sequence ({$emailCount} emails)", 'Sales Page'];
         if ($needsUpsell === 'Yes') {
@@ -268,20 +271,24 @@ class StructureJob implements ShouldQueue
             $components[] = 'Webinar Invitation Email';
         }
 
-        $system = "You are an expert direct response copywriter who builds funnels that convert cold traffic.{$voice}";
+        $system = 'You are an expert direct response copywriter creating a niche funnel copy template pack. '
+            .'This pack is bought by many people in the same niche — it uses [BRACKETS] for specific details buyers fill in. '
+            ."Tone: {$tone}.{$voice}";
 
-        $user = "What is being sold: {$p->niche}\nPrice point: {$pricePoint}\n"
-            ."Ideal buyer: {$p->buyer_description}\nBuyer problem: {$p->buyer_problem}\n"
-            .'Tried before: '.($opts['tried_before'] ?? '')."\n"
-            .'Differentiator: '.($opts['differentiator'] ?? '')."\n"
+        $user = "Niche: {$p->niche}\nTypical offer price range: {$pricePoint}\n"
+            ."Typical buyer: {$p->buyer_description}\nTheir biggest problem: {$p->buyer_problem}\n"
+            .'What they typically try first: '.($opts['tried_before'] ?? '')."\n"
+            .'What makes great offers in this niche different: '.($opts['differentiator'] ?? '')."\n"
             ."Tone: {$tone}\nAwareness level: {$awarenessLevel}\n"
-            ."Lead magnet type: {$leadMagnetType}\nFunnel length: {$funnel_length}\n{$titleHint}\n\n"
+            ."Lead magnet type: {$leadMagnetType}\nFunnel length: {$funnelLength}\n{$titleHint}\n\n"
+            ."IMPORTANT: Use [YOUR OFFER NAME], [YOUR PRICE], [YOUR BONUS NAME], [YOUR NAME] as placeholders throughout.\n\n"
             ."Design the sales funnel copy pack structure. Return JSON:\n"
-            .'{"product_title":"[Offer] Sales Funnel Copy Pack","tagline":"Your complete funnel — landing page, emails, and sales page",'
+            .'{"product_title":"The '.$p->niche.' Sales Funnel Copy Pack","tagline":"Your complete funnel — landing page, emails, and sales page",'
             .'"funnel_components":'.json_encode($components).','
             .'"email_count":'.$emailCount.','
             .'"awareness_level":"'.$awarenessLevel.'",'
-            .'"lead_magnet_type":"'.$leadMagnetType.'"}'
+            .'"lead_magnet_type":"'.$leadMagnetType.'",'
+            .'"placeholder_guide":{"offer":"[YOUR OFFER NAME]","price":"[YOUR PRICE]","bonus":"[YOUR BONUS NAME]","name":"[YOUR NAME]"}}'
             ."\n\nReturn only the JSON.";
 
         return [$system, $user];

@@ -24,6 +24,13 @@
             </div>
         </div>
 
+        {{-- Niche product note --}}
+        @if(in_array($type, \App\Models\DigitalProduct::extendedTypes()))
+        <div style="background:#F5F4FF;border-left:3px solid #6C3CE1;border-radius:8px;padding:0.7rem 0.9rem;margin-bottom:1.25rem;font-size:0.78rem;color:#5C5470;line-height:1.6;">
+            <strong style="color:#0F0A1E;">You are creating a niche product</strong> — not a custom product for one client. PublishBot generates content for the whole niche with <strong>[BRACKETS]</strong> for buyers to fill in their specific details. You upload once and sell to thousands.
+        </div>
+        @endif
+
         <form method="POST" action="{{ route('digital-products.store') }}"
               onsubmit="document.getElementById('btn-start').textContent='Starting...';document.getElementById('btn-start').style.opacity='0.7';">
             @csrf
@@ -32,106 +39,173 @@
             <div class="pai-card" style="margin-bottom:1.25rem;">
                 <h2 style="margin:0 0 1rem;font-size:0.95rem;font-weight:700;color:#0F0A1E;">Brief</h2>
 
-                {{-- Website Copy Pack --}}
-                @if($type === 'website_copy_pack')
-                    <label class="pai-label">Business name <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="business_name" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Lagos Creative Studio" value="{{ old('business_name') }}"/>
+                {{-- ── 4 CORE FIELDS — same for all 8 new types ─────────────── --}}
+                @if(in_array($type, \App\Models\DigitalProduct::extendedTypes()))
 
-                    <label class="pai-label">What does this business do? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="niche" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Brand design studio for African startups">{{ old('niche') }}</textarea>
+                    <label class="pai-label">
+                        @if($type === 'niche_research_report') What niche to research?
+                        @elseif($type === 'content_calendar_system') What niche or industry is this calendar for?
+                        @elseif($type === 'excel_tracker') What type of business is this tracker for?
+                        @elseif($type === 'notion_business_os') What type of business is this OS for?
+                        @else What niche or industry is this product for?
+                        @endif
+                        <span style="color:#EF4444;">*</span>
+                    </label>
+                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;"
+                        placeholder="{{ match($type) {
+                            'niche_research_report'     => 'e.g. Online fitness coaching for African women',
+                            'content_calendar_system'   => 'e.g. Personal finance for young Nigerians',
+                            'excel_tracker'             => 'e.g. Freelance copywriting businesses',
+                            'notion_business_os'        => 'e.g. Marketing consultants',
+                            'website_copy_pack'         => 'e.g. Freelance graphic designers',
+                            'brand_messaging_system'    => 'e.g. Business coaches and consultants',
+                            'sales_funnel_copy'         => 'e.g. Online course creators in Africa',
+                            'buyer_persona_pack'        => 'e.g. Social media management agencies',
+                            default                     => 'e.g. Freelance graphic designers',
+                        } }}"
+                        value="{{ old('niche') }}"/>
 
-                    <label class="pai-label">Who is the ideal customer? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Nigerian tech founders launching their first product">{{ old('buyer_description') }}</textarea>
+                    <label class="pai-label">Who is the typical buyer in this niche? <span style="color:#EF4444;">*</span></label>
+                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;"
+                        placeholder="{{ match($type) {
+                            'niche_research_report'   => 'e.g. A founder deciding whether to launch a product in this niche',
+                            'content_calendar_system' => 'e.g. Young professionals in Lagos learning to save and invest',
+                            'excel_tracker'           => 'e.g. Solo freelancers managing multiple clients without a CRM',
+                            'notion_business_os'      => 'e.g. Solo consultants managing 5–10 clients using WhatsApp and notebooks',
+                            'website_copy_pack'       => 'e.g. Self-employed designers launching or rebranding their website',
+                            'brand_messaging_system'  => 'e.g. Coaches who have been in business 1–3 years and struggle to explain what they do',
+                            'sales_funnel_copy'       => 'e.g. Course creators who have knowledge to sell but no funnel to sell it with',
+                            'buyer_persona_pack'      => 'e.g. Agency owners who need to understand their clients\' customers better',
+                            default                   => 'e.g. Self-employed professionals who want to grow their business',
+                        } }}">{{ old('buyer_description') }}</textarea>
 
-                    <label class="pai-label">Top 3 problems you solve <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Weak brand perception, no consistency, poor online presence">{{ old('buyer_problem') }}</textarea>
+                    <label class="pai-label">What is their biggest problem? <span style="color:#EF4444;">*</span></label>
+                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;"
+                        placeholder="{{ match($type) {
+                            'niche_research_report'   => 'e.g. They don\'t know if this niche is worth entering before investing months of work',
+                            'content_calendar_system' => 'e.g. They run out of ideas after week 2 and stop posting consistently',
+                            'excel_tracker'           => 'e.g. Losing track of invoices, late payments, and which clients owe money',
+                            'notion_business_os'      => 'e.g. No central place for client info — missing deadlines and disorganised finances',
+                            'website_copy_pack'       => 'e.g. They don\'t know what to write on their website and can\'t afford a copywriter',
+                            'brand_messaging_system'  => 'e.g. They sound generic online and lose deals to competitors who look more established',
+                            'sales_funnel_copy'       => 'e.g. They have great offers but no system to attract and convert cold leads',
+                            'buyer_persona_pack'      => 'e.g. Writing copy for "everyone" and converting nobody',
+                            default                   => 'e.g. They spend too much time on low-value tasks instead of growing their business',
+                        } }}">{{ old('buyer_problem') }}</textarea>
 
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">What makes this business different? <span style="color:#EF4444;">*</span></label>
-                        <textarea name="differentiator" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Only agency in Lagos that specialises in Afrocentric branding for tech startups">{{ old('differentiator') }}</textarea>
+                    <label class="pai-label">Tone of voice</label>
+                    <select name="tone" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
+                        @foreach(['Professional','Warm and friendly','Bold and direct','Casual','Empathetic'] as $t)
+                            <option value="{{ $t }}" {{ old('tone','Professional') === $t ? 'selected' : '' }}>{{ $t }}</option>
+                        @endforeach
+                    </select>
 
-                        <label class="pai-label">Tone of voice</label>
-                        <select name="tone" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
-                            @foreach(['Friendly and warm','Professional','Bold and direct','Playful','Calm and reassuring'] as $t)
-                                <option value="{{ $t }}" {{ old('tone','Friendly and warm') === $t ? 'selected' : '' }}>{{ $t }}</option>
+                    {{-- ── Type-specific extra fields ──────────────────────── --}}
+
+                    @if($type === 'content_calendar_system')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">Which platforms?</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+                            @foreach(['Instagram','LinkedIn','X (Twitter)','TikTok','Pinterest','Facebook','YouTube'] as $p)
+                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.82rem;cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.35rem 0.7rem;">
+                                    <input type="checkbox" name="platforms[]" value="{{ $p }}" {{ in_array($p, old('platforms', ['Instagram','LinkedIn'])) ? 'checked' : '' }}> {{ $p }}
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <label class="pai-label">How many posts per week?</label>
+                        <select name="posting_frequency" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
+                            @foreach(['3','5','7','Daily'] as $f)
+                                <option value="{{ $f }}" {{ old('posting_frequency','5') === $f ? 'selected' : '' }}>{{ $f }} posts/week</option>
                             @endforeach
                         </select>
 
-                        <label class="pai-label">How many service pages?</label>
+                        <label class="pai-label">Content goals</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                            @foreach(['Brand awareness','Leads','Sales','Community','Authority'] as $g)
+                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.82rem;cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.35rem 0.7rem;">
+                                    <input type="checkbox" name="content_goals[]" value="{{ $g }}" {{ in_array($g, old('content_goals', ['Brand awareness','Authority'])) ? 'checked' : '' }}> {{ $g }}
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @elseif($type === 'excel_tracker')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">What type of tracker? <span style="color:#EF4444;">*</span></label>
+                        <select name="tracker_type" required class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
+                            <option value="">— Choose tracker type —</option>
+                            @foreach(['Client tracker','Income tracker','Project tracker','Sales pipeline','Social media analytics','Inventory tracker','Custom'] as $t)
+                                <option value="{{ $t }}" {{ old('tracker_type') === $t ? 'selected' : '' }}>{{ $t }}</option>
+                            @endforeach
+                        </select>
+
+                        <label class="pai-label">How many team members will typically use it?</label>
+                        <select name="team_size" class="pai-input" style="cursor:pointer;">
+                            @foreach(['Just me','2-5','5-10','10+'] as $s)
+                                <option value="{{ $s }}" {{ old('team_size','Just me') === $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    @elseif($type === 'notion_business_os')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">Solo or team?</label>
+                        <select name="team_size" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
+                            @foreach(['Solo','Small team 2-5','Larger team'] as $s)
+                                <option value="{{ $s }}" {{ old('team_size','Solo') === $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+
+                        <label class="pai-label">Typical number of clients at once?</label>
+                        <select name="client_count" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
+                            @foreach(['1-5','5-10','10-20','20+'] as $c)
+                                <option value="{{ $c }}" {{ old('client_count','1-5') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                            @endforeach
+                        </select>
+
+                        <label class="pai-label">Which areas to organise?</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                            @foreach(['Clients','Projects','Content','Finance','SOPs','Goals','Meetings','Personal productivity'] as $a)
+                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.82rem;cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.35rem 0.7rem;">
+                                    <input type="checkbox" name="organise_areas[]" value="{{ $a }}" {{ in_array($a, old('organise_areas', ['Clients','Projects','Finance'])) ? 'checked' : '' }}> {{ $a }}
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @elseif($type === 'website_copy_pack')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">How many service pages should the pack include?</label>
                         <select name="service_count" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
                             @foreach([1,2,3,4,5] as $n)
-                                <option value="{{ $n }}" {{ (int)old('service_count',2) === $n ? 'selected' : '' }}>{{ $n }} page{{ $n > 1 ? 's' : '' }}</option>
+                                <option value="{{ $n }}" {{ (int)old('service_count',2) === $n ? 'selected' : '' }}>{{ $n }} service page{{ $n > 1 ? 's' : '' }}</option>
                             @endforeach
                         </select>
 
-                        <label class="pai-label">Service names <span style="color:#9B93B0;font-weight:400;">(one per line)</span></label>
-                        <textarea name="service_names" rows="3" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="Brand Strategy&#10;Logo Design&#10;Website Design">{{ old('service_names') }}</textarea>
-
-                        <label class="pai-label">Business location <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
-                        <input type="text" name="business_location" class="pai-input" placeholder="e.g. Lagos Island, Lagos" value="{{ old('business_location') }}"/>
+                        <label class="pai-label">Typical service names in this niche <span style="color:#9B93B0;font-weight:400;">(one per line — buyers replace with their own)</span></label>
+                        <textarea name="service_names" rows="3" class="pai-input" style="resize:vertical;" placeholder="e.g. Brand Identity Package&#10;Logo Design&#10;Website Design">{{ old('service_names') }}</textarea>
                     </div>
 
-                {{-- Brand Messaging System --}}
-                @elseif($type === 'brand_messaging_system')
-                    <label class="pai-label">Business or brand name <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="business_name" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Kemi Builds" value="{{ old('business_name') }}"/>
+                    @elseif($type === 'brand_messaging_system')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">What makes the top practitioners in this niche different from the average?</label>
+                        <textarea name="differentiator" rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. The best ones specialise in one industry and charge premium rates — they don't try to work with everyone">{{ old('differentiator') }}</textarea>
 
-                    <label class="pai-label">Your name <span style="color:#9B93B0;font-weight:400;">(if personal brand)</span></label>
-                    <input type="text" name="founder_name" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Kemi Adeleke" value="{{ old('founder_name') }}"/>
-
-                    <label class="pai-label">What do you do in one sentence? <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. I help African founders build brands that attract premium clients" value="{{ old('niche') }}"/>
-
-                    <label class="pai-label">Who do you help? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Early-stage founders in Nigeria and Ghana who want to stand out">{{ old('buyer_description') }}</textarea>
-
-                    <label class="pai-label">What problem do you solve? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Founders sound generic and lose deals to competitors who look more established">{{ old('buyer_problem') }}</textarea>
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">What makes you different? <span style="color:#EF4444;">*</span></label>
-                        <textarea name="differentiator" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. I combine brand psychology with African storytelling — no western templates">{{ old('differentiator') }}</textarea>
-
-                        <label class="pai-label">Your core values <span style="color:#9B93B0;font-weight:400;">(up to 5, one per line)</span></label>
-                        <textarea name="core_values" rows="3" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="Authenticity&#10;Excellence&#10;Community">{{ old('core_values') }}</textarea>
-
-                        <label class="pai-label">Your personality in 3 words</label>
-                        <input type="text" name="personality_words" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Bold, warm, direct" value="{{ old('personality_words') }}"/>
-
-                        <label class="pai-label">What do you never want to sound like?</label>
-                        <input type="text" name="avoid_sounding_like" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Corporate, robotic, or preachy" value="{{ old('avoid_sounding_like') }}"/>
-
-                        <label class="pai-label">Price point of main offer</label>
-                        <input type="text" name="price_point" class="pai-input" placeholder="e.g. ₦500,000 / $1,500" value="{{ old('price_point') }}"/>
+                        <label class="pai-label">Typical price point for services in this niche</label>
+                        <input type="text" name="price_point" class="pai-input" placeholder="e.g. ₦500,000–₦2,000,000 / $500–$5,000 per project" value="{{ old('price_point') }}"/>
                     </div>
 
-                {{-- Sales Funnel Copy Pack --}}
-                @elseif($type === 'sales_funnel_copy')
-                    <label class="pai-label">What are you selling? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="niche" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. A 6-week online course on freelance pricing for Nigerian designers">{{ old('niche') }}</textarea>
+                    @elseif($type === 'sales_funnel_copy')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">Typical price point for offers in this niche <span style="color:#EF4444;">*</span></label>
+                        <input type="text" name="price_point" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. $297–$997 / ₦50,000–₦200,000" value="{{ old('price_point') }}"/>
 
-                    <label class="pai-label">Who is the ideal buyer? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Freelance designers in Africa, 1-5 years experience, undercharging">{{ old('buyer_description') }}</textarea>
+                        <label class="pai-label">What do buyers in this niche typically try before buying?</label>
+                        <textarea name="tried_before" rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Free YouTube tutorials, cheap Udemy courses, DIY approaches that don't work">{{ old('tried_before') }}</textarea>
 
-                    <label class="pai-label">Their biggest problem? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. They attract low-budget clients and don't know how to charge premium rates">{{ old('buyer_problem') }}</textarea>
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">Price point <span style="color:#EF4444;">*</span></label>
-                        <input type="text" name="price_point" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. $497 or ₦150,000" value="{{ old('price_point') }}"/>
-
-                        <label class="pai-label">What have they tried before?</label>
-                        <textarea name="tried_before" rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. YouTube tutorials, free courses, copying others' pricing">{{ old('tried_before') }}</textarea>
-
-                        <label class="pai-label">What makes your offer different?</label>
-                        <textarea name="differentiator" rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Live coaching + proven pricing framework specific to the African market">{{ old('differentiator') }}</textarea>
-
-                        <label class="pai-label">Tone</label>
-                        <select name="tone" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
-                            @foreach(['Friendly','Professional','Bold','Empathetic','Direct'] as $t)
-                                <option value="{{ $t }}" {{ old('tone','Friendly') === $t ? 'selected' : '' }}>{{ $t }}</option>
-                            @endforeach
-                        </select>
+                        <label class="pai-label">What makes the best offers in this niche stand out?</label>
+                        <textarea name="differentiator" rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Done-with-you coaching instead of just recorded videos, plus a community">{{ old('differentiator') }}</textarea>
 
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                             <div>
@@ -151,18 +225,8 @@
                         </div>
                     </div>
 
-                {{-- Niche Research Report --}}
-                @elseif($type === 'niche_research_report')
-                    <label class="pai-label">What niche to research? <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Online fitness coaching for African women" value="{{ old('niche') }}"/>
-
-                    <label class="pai-label">Who will use this report? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. A founder deciding whether to launch a product in this niche">{{ old('buyer_description') }}</textarea>
-
-                    <label class="pai-label">What decision does this report inform? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Whether to invest 6 months building a course or a software product">{{ old('buyer_problem') }}</textarea>
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
+                    @elseif($type === 'niche_research_report')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
                         <label class="pai-label">Geographic focus</label>
                         <select name="geography" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
                             @foreach(['Global','USA','UK','Nigeria','Africa','Europe','Asia','Other'] as $g)
@@ -180,24 +244,14 @@
                         <label class="pai-label">Specific competitors to include <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
                         <input type="text" name="competitors" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Piggyvest, Cowrywise, Risevest" value="{{ old('competitors') }}"/>
 
-                        <label class="pai-label">Specific questions to answer <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
-                        <textarea name="specific_questions" rows="2" class="pai-input" style="resize:vertical;" placeholder="e.g. What is the total addressable market? Who are the top 3 players?">{{ old('specific_questions') }}</textarea>
+                        <label class="pai-label">Specific questions this report must answer <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
+                        <textarea name="specific_questions" rows="2" class="pai-input" style="resize:vertical;" placeholder="e.g. What is the TAM? Who are the top 3 players? Where is the white space?">{{ old('specific_questions') }}</textarea>
                     </div>
 
-                {{-- Buyer Persona Pack --}}
-                @elseif($type === 'buyer_persona_pack')
-                    <label class="pai-label">What industry or niche? <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Social media management for SMEs" value="{{ old('niche') }}"/>
-
-                    <label class="pai-label">Describe your ideal customer broadly <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Small business owners in Nigeria, 30-50, struggling to stay consistent online">{{ old('buyer_description') }}</textarea>
-
-                    <label class="pai-label">What are you selling to them? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Done-for-you social media management at ₦150,000/month">{{ old('buyer_problem') }}</textarea>
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">Price point</label>
-                        <input type="text" name="price_point" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. $297 / ₦120,000 per month" value="{{ old('price_point') }}"/>
+                    @elseif($type === 'buyer_persona_pack')
+                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;">
+                        <label class="pai-label">Typical price point for offers in this niche</label>
+                        <input type="text" name="price_point" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. $297/month / ₦120,000 per project" value="{{ old('price_point') }}"/>
 
                         <label class="pai-label">How many personas?</label>
                         <select name="persona_count" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
@@ -209,122 +263,12 @@
                         <label class="pai-label">Geographic focus</label>
                         <input type="text" name="geography" class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Nigeria, South Africa, Kenya" value="{{ old('geography','Nigeria') }}"/>
 
-                        <label class="pai-label">Any specific persona types to include? <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
-                        <textarea name="persona_types" rows="2" class="pai-input" style="resize:vertical;" placeholder="e.g. The overwhelmed founder, the budget-conscious manager">{{ old('persona_types') }}</textarea>
+                        <label class="pai-label">Any specific persona archetypes to include? <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
+                        <textarea name="persona_types" rows="2" class="pai-input" style="resize:vertical;" placeholder="e.g. The overwhelmed beginner, the experienced pro ready to scale, the sceptic who has tried and failed">{{ old('persona_types') }}</textarea>
                     </div>
+                    @endif
 
-                {{-- Excel Tracker --}}
-                @elseif($type === 'excel_tracker')
-                    <label class="pai-label">What type of business is this tracker for? <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Freelance copywriting business" value="{{ old('niche') }}"/>
-
-                    <label class="pai-label">Who will use this tracker? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Solo freelancers managing multiple clients without a CRM">{{ old('buyer_description') }}</textarea>
-
-                    <label class="pai-label">Their biggest tracking problem? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Losing track of invoices, late payments, which clients owe money">{{ old('buyer_problem') }}</textarea>
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">What type of tracker? <span style="color:#EF4444;">*</span></label>
-                        <select name="tracker_type" required class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
-                            <option value="">— Choose tracker type —</option>
-                            @foreach(['Client tracker','Income tracker','Project tracker','Sales pipeline','Social media analytics','Inventory tracker','Custom'] as $t)
-                                <option value="{{ $t }}" {{ old('tracker_type') === $t ? 'selected' : '' }}>{{ $t }}</option>
-                            @endforeach
-                        </select>
-
-                        <label class="pai-label">How many team members will use it?</label>
-                        <select name="team_size" class="pai-input" style="cursor:pointer;">
-                            @foreach(['Just me','2-5','5-10','10+'] as $s)
-                                <option value="{{ $s }}" {{ old('team_size','Just me') === $s ? 'selected' : '' }}>{{ $s }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                {{-- Notion Business OS --}}
-                @elseif($type === 'notion_business_os')
-                    <label class="pai-label">What type of business? <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Marketing consultancy" value="{{ old('niche') }}"/>
-
-                    <label class="pai-label">Who is this workspace for? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Solo consultant managing 5-10 clients, using WhatsApp and notebooks">{{ old('buyer_description') }}</textarea>
-
-                    <label class="pai-label">Biggest operational problems to solve? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_problem" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. No central place for client info, missing deadlines, disorganised finances">{{ old('buyer_problem') }}</textarea>
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">Solo or team?</label>
-                        <select name="team_size" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
-                            @foreach(['Solo','Small team 2-5','Larger team'] as $s)
-                                <option value="{{ $s }}" {{ old('team_size','Solo') === $s ? 'selected' : '' }}>{{ $s }}</option>
-                            @endforeach
-                        </select>
-
-                        <label class="pai-label">How many clients at once?</label>
-                        <select name="client_count" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
-                            @foreach(['1-5','5-10','10-20','20+'] as $c)
-                                <option value="{{ $c }}" {{ old('client_count','1-5') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                            @endforeach
-                        </select>
-
-                        <label class="pai-label">Which areas to organise?</label>
-                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
-                            @foreach(['Clients','Projects','Content','Finance','SOPs','Goals','Meetings','Personal productivity'] as $a)
-                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.82rem;cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.35rem 0.7rem;">
-                                    <input type="checkbox" name="organise_areas[]" value="{{ $a }}" {{ in_array($a, old('organise_areas', ['Clients','Projects','Finance'])) ? 'checked' : '' }}> {{ $a }}
-                                </label>
-                            @endforeach
-                        </div>
-
-                        <label class="pai-label">Current tools to replace <span style="color:#9B93B0;font-weight:400;">(optional)</span></label>
-                        <input type="text" name="current_tools" class="pai-input" placeholder="e.g. WhatsApp, spreadsheets, paper notebooks" value="{{ old('current_tools') }}"/>
-                    </div>
-
-                {{-- Content Calendar System --}}
-                @elseif($type === 'content_calendar_system')
-                    <label class="pai-label">What niche or industry is this calendar for? <span style="color:#EF4444;">*</span></label>
-                    <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Personal finance for Nigerians" value="{{ old('niche') }}"/>
-
-                    <label class="pai-label">Who is the target audience? <span style="color:#EF4444;">*</span></label>
-                    <textarea name="buyer_description" required rows="2" class="pai-input" style="resize:vertical;margin-bottom:1rem;" placeholder="e.g. Young professionals in Lagos learning to save and invest">{{ old('buyer_description') }}</textarea>
-
-                    <input type="hidden" name="buyer_problem" value="Consistent content creation and planning">
-
-                    <div style="border-top:1px solid #E4E0F0;padding-top:1rem;margin-top:0.25rem;">
-                        <label class="pai-label">Which platforms? <span style="color:#EF4444;">*</span></label>
-                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
-                            @foreach(['Instagram','LinkedIn','X (Twitter)','TikTok','Pinterest','Facebook','YouTube'] as $p)
-                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.82rem;cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.35rem 0.7rem;">
-                                    <input type="checkbox" name="platforms[]" value="{{ $p }}" {{ in_array($p, old('platforms', ['Instagram','LinkedIn'])) ? 'checked' : '' }}> {{ $p }}
-                                </label>
-                            @endforeach
-                        </div>
-
-                        <label class="pai-label">How many posts per week?</label>
-                        <select name="posting_frequency" class="pai-input" style="margin-bottom:1rem;cursor:pointer;">
-                            @foreach(['3','5','7','Daily'] as $f)
-                                <option value="{{ $f }}" {{ old('posting_frequency','5') === $f ? 'selected' : '' }}>{{ $f }} posts/week</option>
-                            @endforeach
-                        </select>
-
-                        <label class="pai-label">Content goals</label>
-                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
-                            @foreach(['Brand awareness','Leads','Sales','Community','Authority'] as $g)
-                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.82rem;cursor:pointer;background:#F5F4FF;border-radius:8px;padding:0.35rem 0.7rem;">
-                                    <input type="checkbox" name="content_goals[]" value="{{ $g }}" {{ in_array($g, old('content_goals', ['Brand awareness','Authority'])) ? 'checked' : '' }}> {{ $g }}
-                                </label>
-                            @endforeach
-                        </div>
-
-                        <label class="pai-label">Tone of voice</label>
-                        <select name="tone" class="pai-input" style="cursor:pointer;">
-                            @foreach(['Professional','Casual','Inspirational','Educational','Entertaining'] as $t)
-                                <option value="{{ $t }}" {{ old('tone','Educational') === $t ? 'selected' : '' }}>{{ $t }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                {{-- Original types: Prompt Library, SOP Pack, Email Vault --}}
+                {{-- ── ORIGINAL 3 TYPES — unchanged ────────────────────────── --}}
                 @elseif($type === 'prompt_library')
                     <label class="pai-label">What is the niche or topic? <span style="color:#EF4444;">*</span></label>
                     <input type="text" name="niche" required class="pai-input" style="margin-bottom:1rem;" placeholder="e.g. Freelance graphic designers" value="{{ old('niche') }}"/>
