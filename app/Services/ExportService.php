@@ -227,12 +227,13 @@ class ExportService
      */
     public function exportKdpDocx(string $relPath, string $title, string $author, ?string $subtitle, array $chapters): string
     {
+        // Plain PhpWord — NO addTitleStyle, NO addTitle (both cause broken DOCX on Word).
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontName('Times New Roman');
         $phpWord->setDefaultFontSize(12);
         $phpWord->getSettings()->setThemeFontLang(new Language(Language::EN_US));
 
-        // 1-inch margins (1440 twips)
+        // 1-inch margins (1440 twips) — KDP standard
         $section = $phpWord->addSection([
             'marginTop' => 1440,
             'marginBottom' => 1440,
@@ -240,22 +241,37 @@ class ExportService
             'marginRight' => 1440,
         ]);
 
-        // Heading 1 = chapter title
-        $phpWord->addTitleStyle(1, ['name' => 'Times New Roman', 'size' => 18, 'bold' => true], ['alignment' => Jc::CENTER, 'spaceAfter' => 480]);
-
         // Title page
-        $section->addText($title, ['name' => 'Times New Roman', 'size' => 28, 'bold' => true], ['alignment' => Jc::CENTER, 'spaceBefore' => 2400]);
+        $section->addText(
+            $title,
+            ['name' => 'Times New Roman', 'size' => 28, 'bold' => true],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 2400, 'spaceAfter' => 240]
+        );
         if ($subtitle) {
-            $section->addText($subtitle, ['name' => 'Times New Roman', 'size' => 16, 'italic' => true], ['alignment' => Jc::CENTER, 'spaceBefore' => 240]);
+            $section->addText(
+                $subtitle,
+                ['name' => 'Times New Roman', 'size' => 16, 'italic' => true],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 240]
+            );
         }
-        $section->addText('by '.$author, ['name' => 'Times New Roman', 'size' => 14], ['alignment' => Jc::CENTER, 'spaceBefore' => 720]);
+        $section->addText(
+            'by '.$author,
+            ['name' => 'Times New Roman', 'size' => 14],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 720]
+        );
         $section->addPageBreak();
 
         foreach ($chapters as $i => $chapter) {
             if ($i > 0) {
                 $section->addPageBreak();
             }
-            $section->addTitle($chapter['title'], 1);
+
+            // Chapter heading as bold plain text (NOT addTitle — that causes corruption)
+            $section->addText(
+                $chapter['title'] ?? '',
+                ['name' => 'Times New Roman', 'size' => 18, 'bold' => true],
+                ['alignment' => Jc::CENTER, 'spaceBefore' => 240, 'spaceAfter' => 480]
+            );
 
             foreach ($this->paragraphs($chapter['body']) as $para) {
                 $section->addText($para, ['name' => 'Times New Roman', 'size' => 12], [
@@ -282,11 +298,12 @@ class ExportService
     {
         $brandColor = ltrim($brandColor, '#');
 
+        // Use plain PhpWord — NO addTitleStyle, NO addTitle, NO addTOC.
+        // Those three PhpWord features generate broken DOCX on many Word versions.
+        // All headings are rendered as bold large addText() calls instead.
         $phpWord = new PhpWord;
         $phpWord->setDefaultFontName('Calibri');
         $phpWord->setDefaultFontSize(11);
-
-        $phpWord->addTitleStyle(1, ['name' => 'Calibri', 'size' => 20, 'bold' => true, 'color' => $brandColor], ['spaceBefore' => 480, 'spaceAfter' => 240]);
 
         $section = $phpWord->addSection([
             'marginTop' => 1440,
@@ -295,27 +312,53 @@ class ExportService
             'marginRight' => 1440,
         ]);
 
-        // Cover
-        $section->addText($title, ['name' => 'Calibri', 'size' => 36, 'bold' => true, 'color' => $brandColor], ['alignment' => Jc::CENTER, 'spaceBefore' => 2880]);
+        // Cover page
+        $section->addText(
+            $title,
+            ['name' => 'Calibri', 'size' => 32, 'bold' => true, 'color' => $brandColor],
+            ['alignment' => Jc::CENTER, 'spaceBefore' => 2880, 'spaceAfter' => 240]
+        );
         if ($subtitle) {
-            $section->addText($subtitle, ['name' => 'Calibri', 'size' => 18, 'italic' => true, 'color' => '666666'], ['alignment' => Jc::CENTER, 'spaceBefore' => 300]);
+            $section->addText(
+                $subtitle,
+                ['name' => 'Calibri', 'size' => 16, 'italic' => true, 'color' => '666666'],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 240]
+            );
         }
-        $section->addText('by '.$author, ['name' => 'Calibri', 'size' => 14, 'color' => '333333'], ['alignment' => Jc::CENTER, 'spaceBefore' => 720]);
+        $section->addText(
+            'by '.$author,
+            ['name' => 'Calibri', 'size' => 13, 'color' => '333333'],
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 480]
+        );
         $section->addPageBreak();
 
-        // Contents list (manual — PhpWord's addTOC generates broken DOCX on many Word versions)
-        $section->addText('Contents', ['name' => 'Calibri', 'size' => 22, 'bold' => true, 'color' => $brandColor], ['spaceAfter' => 240]);
+        // Contents page (plain text — no TOC field codes)
+        $section->addText(
+            'Contents',
+            ['name' => 'Calibri', 'size' => 20, 'bold' => true, 'color' => $brandColor],
+            ['spaceAfter' => 240]
+        );
         foreach ($chapters as $i => $chapter) {
-            $section->addText(($i + 1).'. '.($chapter['title'] ?? ''), ['name' => 'Calibri', 'size' => 12, 'color' => $brandColor], ['spaceAfter' => 120]);
+            $section->addText(
+                ($i + 1).'.  '.($chapter['title'] ?? ''),
+                ['name' => 'Calibri', 'size' => 12, 'color' => $brandColor],
+                ['spaceAfter' => 100]
+            );
         }
         $section->addPageBreak();
 
-        // Chapters
+        // Chapters — plain bold text for headings (no addTitle / heading styles)
         foreach ($chapters as $i => $chapter) {
             if ($i > 0) {
                 $section->addPageBreak();
             }
-            $section->addTitle($chapter['title'], 1);
+
+            // Chapter heading as bold large text
+            $section->addText(
+                $chapter['title'] ?? '',
+                ['name' => 'Calibri', 'size' => 18, 'bold' => true, 'color' => $brandColor],
+                ['spaceBefore' => 240, 'spaceAfter' => 360]
+            );
 
             foreach ($this->paragraphs($chapter['body']) as $para) {
                 $section->addText($para, ['name' => 'Calibri', 'size' => 11], [
@@ -326,7 +369,7 @@ class ExportService
             }
         }
 
-        // Footer with page numbers
+        // Footer — page numbers
         $footer = $section->addFooter();
         $footer->addPreserveText('{PAGE} / {NUMPAGES}', ['size' => 9, 'color' => '999999'], ['alignment' => Jc::CENTER]);
 
